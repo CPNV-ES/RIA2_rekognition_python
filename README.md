@@ -16,7 +16,7 @@ python3 -m venv venv
 
 . venv/bin/activate
 
-export FLASK_APP=app.py
+export FLASK_APP=flaskr.py
 export FLASK_ENV=development
 python -m flask run
 ```
@@ -28,19 +28,8 @@ python -m venv venv
 
 . .\venv\Scripts\Activate.ps1
 
-$Env:FLASK_APP="app.py"
+$Env:FLASK_APP="flaskr.py"
 $Env:FLASK_ENV="development"
-python -m flask run
-```
-
-Alternatively you can also do this on Windows if the solution above didn't worked
-```powershell
-python -m venv venv
-
-.\venv\Scripts\activate
-
-$set FLASK_APP=app.py
-$set FLASK_ENV=development
 python -m flask run
 ```
 
