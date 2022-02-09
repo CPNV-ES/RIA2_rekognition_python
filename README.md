@@ -2,50 +2,37 @@
 
 ## Get Started 
 
-First install the dependancies
+First install the dependencies
 ```sh
 pip install -r requirements.txt
 ```
 
-### On ``Linux``
+## Create a virtual python environnment
 
-To create a virtual python environnment :
+### On ``Linux``
 
 ```sh
 python3 -m venv venv
 
 . venv/bin/activate
 
-export FLASK_APP=app.py
-export FLASK_ENV=development
-python -m flask run
+export FLASK_APP=__init__.py
 ```
 
-## On ``Windows`` with ``Powershell``
+### On ``Windows`` with ``Powershell``
 
 ```powershell
-python -m venv venv
+py -3 -m venv venv
 
-. .\venv\Scripts\Activate.ps1
+venv\Scripts\activate
 
-$Env:FLASK_APP="app.py"
-$Env:FLASK_ENV="development"
-python -m flask run
+$Env:FLASK_APP="__init__.py"
 ```
 
-Alternatively you can also do this on Windows if the solution above didn't worked
-```powershell
-python -m venv venv
-
-.\venv\Scripts\activate
-
-$set FLASK_APP=app.py
-$set FLASK_ENV=development
-python -m flask run
-```
-
-### Run
+## Run
 
 ```sh
-flask run --host=0.0.0.0
+cd .\flaskr\
+
+flask run
 ```
