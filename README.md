@@ -28,3 +28,11 @@ cd .\flaskr\
 
 flask run
 ```
+
+## Set environment variables
+
+```sh
+cp .env.exemple .env
+```
+
+Edit the file with your environment variables
