@@ -29,3 +29,6 @@ class EnvironmentTestCase(unittest.TestCase):
     def test_bucket_folder_set(self):
         bucket_folder = os.getenv("BUCKET_FOLDER")
         self.assertFalse(not bucket_folder, "BUCKET_FOLDER env is not set")
+
+if __name__ == '__main__':
+    unittest.main()
