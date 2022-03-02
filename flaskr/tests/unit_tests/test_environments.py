@@ -1,19 +1,9 @@
 import unittest
-from xml import dom
-from dotenv import load_dotenv
+import settings
 import os
 
 
 class EnvironmentTestCase(unittest.TestCase):
-    """
-    This test class is designed to confirm the loading of environment variable
-    """
-    def setUp(self):
-        """
-        This test method initializes the context before each test method run.
-        """
-        load_dotenv(".env")
-
     def test_domain_set(self):
         domain = os.getenv("DOMAIN")
         self.assertFalse(not domain, "DOMAIN env is not set")
