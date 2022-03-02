@@ -16,20 +16,12 @@ python3 -m venv venv
 
 . venv/bin/activate
 
-export FLASK_APP=__init__.py
+export FLASK_APP=flaskr.py
+export FLASK_ENV=development
+python -m flask run
 ```
 
-### On ``Windows`` with ``Powershell``
-
-```powershell
-py -3 -m venv venv
-
-venv\Scripts\activate
-
-$Env:FLASK_APP="__init__.py"
-```
-
-## Run
+### Run
 
 ```sh
 cd .\flaskr\
