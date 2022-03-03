@@ -22,9 +22,9 @@ class EnvironmentTestCase(unittest.TestCase):
         domain = os.getenv("DOMAIN")
         bucket_url = os.getenv("BUCKET_URL")
 
-        expectedUrl = bucket_name + "." + domain
+        expected_url = bucket_name + "." + domain
 
-        self.assertEqual(bucket_url, expectedUrl, "the format of bucket url is not corresponding with the wanted one try to use ${BUCKET_NAME}.${DOMAIN} format")
+        self.assertEqual(bucket_url, expected_url, "the format of bucket url is not corresponding with the wanted one try to use ${BUCKET_NAME}.${DOMAIN} format")
 
     def test_bucket_folder_set(self):
         bucket_folder = os.getenv("BUCKET_FOLDER")
