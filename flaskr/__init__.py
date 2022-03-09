@@ -1,6 +1,12 @@
+import datetime
 import os
-
-from flask import Flask
+import re
+from flask import Flask, request, jsonify
+import pandas as pd
+import json as js
+from flaskr.aws_bucket_manager import AwsBucketManager
+import time
+import tempfile
 
 
 def create_app(test_config=None):
@@ -28,5 +34,50 @@ def create_app(test_config=None):
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
+
+    @app.route('/api/generate/sql', methods=['POST'])
+    def generate_sql():
+        content = request.get_json(silent=True)
+
+        try:
+            if (not content):
+                raise Exception("No content")
+            df = pd.DataFrame(js.loads(js.dumps(content)))
+            sql_text = get_insert_query_from_df(df, 'rekognition_result')
+
+            tmp = tempfile.NamedTemporaryFile(delete=False)
+
+            tmp.write(bytes(sql_text, 'utf-8'))
+            generate_sql_filename = datetime.datetime.now().strftime(
+                "%Y-%m-%d_%H-%M-%S-%f") + "_MAAAAA.sql"
+            object_url = '%s/%s' % (os.getenv("BUCKET_URL"),
+                                    generate_sql_filename)
+            if(os.path.exists(tmp.name)):
+                bucket = AwsBucketManager(os.getenv("BUCKET_URL"))
+                bucket.create_object(object_url, tmp.name)
+
+            tmp.close()
+            message = object_url
+        except Exception as e:
+            message = str(e)
+
+        return jsonify({"message": message})
+
+    def get_insert_query_from_df(df, dest_table):
+        insert = """
+        INSERT INTO `{dest_table}` (
+            """.format(dest_table=dest_table)
+
+        columns_string = str(list(df.columns))[1:-1]
+        columns_string = re.sub(r' ', '\n        ', columns_string)
+        columns_string = re.sub(r'\'', '', columns_string)
+
+        values_string = ''
+
+        for row in df.itertuples(index=False, name=None):
+            values_string += re.sub(r'nan', 'null', str(row))
+            values_string += ',\n'
+
+        return insert + columns_string + ')\n     VALUES\n' + values_string[:-2] + ';'
 
     return app
