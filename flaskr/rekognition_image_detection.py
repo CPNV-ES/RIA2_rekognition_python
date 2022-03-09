@@ -215,13 +215,13 @@ def usage_demo():
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(message)s')
     rekognition_client = boto3.client('rekognition')
-    street_scene_file_name = ".media/pexels-kaique-rocha-109919.jpg"
-    celebrity_file_name = ".media/pexels-pixabay-53370.jpg"
+    street_scene_file_name = "https://raw.githubusercontent.com/awsdocs/aws-doc-sdk-examples/main/python/example_code/rekognition/.media/pexels-kaique-rocha-109919.jpg"
+    celebrity_file_name = "https://raw.githubusercontent.com/awsdocs/aws-doc-sdk-examples/main/python/example_code/rekognition/.media/pexels-pixabay-53370.jpg"
     one_girl_url = 'https://dhei5unw3vrsx.cloudfront.net/images/source3_resized.jpg'
     three_girls_url = 'https://dhei5unw3vrsx.cloudfront.net/images/target3_resized.jpg'
     swimwear_object = boto3.resource('s3').Object(
         'console-sample-images-pdx', 'yoga_swimwear.jpg')
-    book_file_name = '.media/pexels-christina-morillo-1181671.jpg'
+    book_file_name = 'https://raw.githubusercontent.com/awsdocs/aws-doc-sdk-examples/main/python/example_code/rekognition/.media/pexels-christina-morillo-1181671.jpg'
 
     street_scene_image = RekognitionImage.from_file(
         street_scene_file_name, rekognition_client)
