@@ -1,12 +1,10 @@
 import datetime
 import os
-from flask import Flask
 from flaskr.aws_bucket_manager import AwsBucketManager
 import re
 from flask import Flask, request, jsonify
 import pandas as pd
 import json as js
-from flaskr.aws_bucket_manager import AwsBucketManager
 import tempfile
 
 
@@ -63,7 +61,7 @@ def create_app(test_config=None):
             object_url = '%s/sql/%s' % (os.getenv("BUCKET_URL"),
                                         generate_sql_filename)
             if(os.path.exists(tmp.name)):
-                bucket = AwsBucketManager(os.getenv("BUCKET_URL"))
+                bucket = AwsBucketManager()
                 bucket.create_object(object_url, tmp.name)
 
             tmp.close()
