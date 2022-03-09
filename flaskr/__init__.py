@@ -1,8 +1,8 @@
 import os
 
 from flask import Flask
-from rekognition_image_detection import RekognitionImage
-from rekognition_image_detection import usage_demo
+from flaskr.rekognition_image_detection import RekognitionImage
+from flaskr.rekognition_image_detection import usage_demo
 
 
 def create_app(test_config=None):
