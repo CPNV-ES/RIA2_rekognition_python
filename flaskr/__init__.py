@@ -1,5 +1,4 @@
 import tempfile
-import time
 import json as js
 import pandas as pd
 from flask import Flask, request, jsonify
@@ -45,7 +44,7 @@ def create_app(test_config=None):
         return result
 
     @app.route('/api/generate/sql', methods=['POST'])
-    def generate_sql():
+    async def generate_sql():
         content = request.get_json(silent=True)
 
         try:
@@ -63,7 +62,7 @@ def create_app(test_config=None):
                                         generate_sql_filename)
             if(os.path.exists(tmp.name)):
                 bucket = AwsBucketManager()
-                bucket.create_object(object_url, tmp.name)
+                await bucket.create_object(object_url, tmp.name)
 
             tmp.close()
             message = object_url
