@@ -35,7 +35,7 @@ def create_app(test_config=None):
     @app.route('/upload', methods=['POST'])
     async def upload():
         result = await aws_bucket_manager.create_object(
-            'ria2python.actualit.info', 'C:/Users/Dylan.OLIVEIRA-RAMOS/OneDrive - CPNV/Images/monkey.jpg')
+            os.getenv('BUCKET_URL'), './monkey.jpg')
 
         return result
 
