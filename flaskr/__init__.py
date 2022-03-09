@@ -50,8 +50,8 @@ def create_app(test_config=None):
             tmp.write(bytes(sql_text, 'utf-8'))
             generate_sql_filename = datetime.datetime.now().strftime(
                 "%Y-%m-%d_%H-%M-%S-%f") + "_MAAAAA.sql"
-            object_url = '%s/%s' % (os.getenv("BUCKET_URL"),
-                                    generate_sql_filename)
+            object_url = '%s/sql/%s' % (os.getenv("BUCKET_URL"),
+                                        generate_sql_filename)
             if(os.path.exists(tmp.name)):
                 bucket = AwsBucketManager(os.getenv("BUCKET_URL"))
                 bucket.create_object(object_url, tmp.name)
