@@ -32,13 +32,14 @@ def create_app(test_config=None):
     def hello():
         return 'Hello, World!'
 
-    @app.route('/rekognition_demo')
-    def rekognition_usage_demo():
-        return usage_demo()
-
     @app.route('/rekognition_face_demo')
     def rekognition_face_demo():
         return face_demo()
+
+    @app.route('/rekognition_face/<url>')
+
+    def rekognition_face(url):
+        return "the url is " + str(url)
 
     # Test
     @app.route('/rekognition_celebrity_demo')

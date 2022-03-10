@@ -289,7 +289,6 @@ def usage_demo():
     print('-'*88)
 
 
-
 def face_demo():
     print('-'*88)
     print("Face Rekognition Demo ")
@@ -304,18 +303,19 @@ def face_demo():
         street_scene_file_name, rekognition_client)
     print(f"Detecting faces in {street_scene_image.image_name}...")
     faces = street_scene_image.detect_faces()
+    
     print(f"Found {len(faces)} faces, here are the first three.")
     for face in faces[:3]:
         pprint(face.to_dict())
+
     show_bounding_boxes(
         street_scene_image.image['Bytes'], [
             [face.bounding_box for face in faces]],
         ['aqua'])
-
-    input("Press Enter to continue.")
-
+    
     print("Thanks for watching!")
     print('-'*88)
+
 
 # This is a test
 def celebrity_demo():
