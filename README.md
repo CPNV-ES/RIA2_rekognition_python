@@ -21,6 +21,13 @@ export FLASK_ENV=development
 python -m flask run
 ```
 
+### On ``Windows``
+
+```sh
+$Env:FLASK_APP="flaskr.py"
+$Env:FLASK_ENV="development"
+```
+
 ### Run
 
 ```sh

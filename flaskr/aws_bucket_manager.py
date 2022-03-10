@@ -19,7 +19,6 @@ class AwsBucketManager:
 
         return 'The file has been uploaded.', 201
 
-
     def object_exists(self):
         pass
 
