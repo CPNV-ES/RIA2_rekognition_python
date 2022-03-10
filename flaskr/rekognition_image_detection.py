@@ -308,7 +308,7 @@ def usage_demo():
         street_scene_image.image['Bytes'], box_sets, colors[:len(names)])
     input("Press Enter to continue.")
 
-    
+
     book_image = RekognitionImage.from_file(book_file_name, rekognition_client)
     print(f"Detecting text in {book_image.image_name}...")
     texts = book_image.detect_text()
@@ -322,5 +322,30 @@ def usage_demo():
     print('-'*88)
 
 
-if __name__ == '__main__':
-    usage_demo()
+
+def face_demo():
+    print('-'*88)
+    print("Face Rekognition Demo ")
+    print('-'*88)
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(levelname)s: %(message)s')
+    rekognition_client = boto3.client('rekognition')
+    street_scene_file_name = "flaskr/images/pexels-kaique-rocha-109919.jpg"
+
+    street_scene_image = RekognitionImage.from_file(
+        street_scene_file_name, rekognition_client)
+    print(f"Detecting faces in {street_scene_image.image_name}...")
+    faces = street_scene_image.detect_faces()
+    print(f"Found {len(faces)} faces, here are the first three.")
+    for face in faces[:3]:
+        pprint(face.to_dict())
+    show_bounding_boxes(
+        street_scene_image.image['Bytes'], [
+            [face.bounding_box for face in faces]],
+        ['aqua'])
+
+    input("Press Enter to continue.")
+
+    print("Thanks for watching!")
+    print('-'*88)
