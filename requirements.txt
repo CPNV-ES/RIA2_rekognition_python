@@ -16,3 +16,4 @@ six==1.16.0
 toml==0.10.2
 urllib3==1.26.8
 Werkzeug==2.0.3
+flask-restplus==0.13.0
