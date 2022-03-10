@@ -6,6 +6,7 @@ import re
 from flaskr.aws_bucket_manager import AwsBucketManager
 import datetime
 import os
+import shutil
 
 
 def create_app(test_config=None):
@@ -39,7 +40,7 @@ def create_app(test_config=None):
     @app.route('/upload', methods=['POST'])
     async def upload():
         result = await aws_bucket_manager.create_object(
-            os.getenv('BUCKET_URL'), './monkey.jpg')
+            os.getenv('BUCKET_URL'), '/home/syra/Downloads/logo@2x.png')
 
         return result
 
@@ -53,19 +54,23 @@ def create_app(test_config=None):
             df = pd.DataFrame(js.loads(js.dumps(content)))
             sql_text = get_insert_query_from_df(df, 'rekognition_result')
 
-            tmp = tempfile.NamedTemporaryFile(delete=False)
+            with tempfile.TemporaryDirectory() as tmp_dir:
 
-            tmp.write(bytes(sql_text, 'utf-8'))
-            generate_sql_filename = datetime.datetime.now().strftime(
-                "%Y-%m-%d_%H-%M-%S-%f") + "_MAAAAA.sql"
-            object_url = '%s/sql/%s' % (os.getenv("BUCKET_URL"),
-                                        generate_sql_filename)
-            if(os.path.exists(tmp.name)):
-                bucket = AwsBucketManager()
-                await bucket.create_object(object_url, tmp.name)
+                if(not os.path.exists(tmp_dir)):
+                    os.mkdir(tmp_dir)
 
-            tmp.close()
-            message = object_url
+                with tempfile.NamedTemporaryFile(delete=False, dir=tmp_dir, suffix=".sql", mode="w+") as tmp:
+                    tmp.write(sql_text)
+                    generate_sql_filename = tmp_dir + '/' + datetime.datetime.now().strftime(
+                        "%Y-%m-%d_%H-%M-%S-%f") + "_MAAAAA.sql"
+                    tmp.close()
+                    shutil.copy(tmp.name, generate_sql_filename)
+
+                if(os.path.exists(generate_sql_filename)):
+                    bucket = AwsBucketManager()
+                    res = await bucket.create_object(os.getenv("BUCKET_URL"), generate_sql_filename)
+
+            message = res
         except Exception as e:
             message = str(e)
 
