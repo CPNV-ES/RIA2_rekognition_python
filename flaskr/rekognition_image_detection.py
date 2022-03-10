@@ -215,7 +215,6 @@ def usage_demo():
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(message)s')
     rekognition_client = boto3.client('rekognition')
-    street_scene_file_name = "flaskr/images/pexels-kaique-rocha-109919.jpg"
     celebrity_file_name = "flaskr/images/pexels-pixabay-53370.jpg"
     one_girl_url = 'https://dhei5unw3vrsx.cloudfront.net/images/source3_resized.jpg'
     three_girls_url = 'https://dhei5unw3vrsx.cloudfront.net/images/target3_resized.jpg'
@@ -226,40 +225,9 @@ def usage_demo():
 
 
 
-    street_scene_image = RekognitionImage.from_file(
-        street_scene_file_name, rekognition_client)
-    print(f"Detecting faces in {street_scene_image.image_name}...")
-    faces = street_scene_image.detect_faces()
-    print(f"Found {len(faces)} faces, here are the first three.")
-    for face in faces[:3]:
-        pprint(face.to_dict())
-    show_bounding_boxes(
-        street_scene_image.image['Bytes'], [
-            [face.bounding_box for face in faces]],
-        ['aqua'])
 
 
 
-    input("Press Enter to continue.")
-
-
-
-
-
-
-
-
-    celebrity_image = RekognitionImage.from_file(
-        celebrity_file_name, rekognition_client)
-    print(f"Detecting celebrities in {celebrity_image.image_name}...")
-    celebs, others = celebrity_image.recognize_celebrities()
-    print(f"Found {len(celebs)} celebrities.")
-    for celeb in celebs:
-        pprint(celeb.to_dict())
-    show_bounding_boxes(
-        celebrity_image.image['Bytes'],
-        [[celeb.face.bounding_box for celeb in celebs]], ['aqua'])
-    input("Press Enter to continue.")
 
 
     girl_image_response = requests.get(one_girl_url)
@@ -281,14 +249,13 @@ def usage_demo():
 
 
     swimwear_image = RekognitionImage.from_bucket(
-        swimwear_object, rekognition_client)
+    swimwear_object, rekognition_client)
     print(f"Detecting suggestive content in {swimwear_object.key}...")
     labels = swimwear_image.detect_moderation_labels()
     print(f"Found {len(labels)} moderation labels.")
     for label in labels:
         pprint(label.to_dict())
     input("Press Enter to continue.")
-
 
 
     print(f"Detecting labels in {street_scene_image.image_name}...")
@@ -349,3 +316,27 @@ def face_demo():
 
     print("Thanks for watching!")
     print('-'*88)
+
+# This is a test
+def celebrity_demo():
+
+    print('-'*88)
+    print("Welcome to the Amazon Rekognition celibrity detection demo!")
+    print('-'*88)
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(levelname)s: %(message)s')
+    rekognition_client = boto3.client('rekognition')
+    celebrity_file_name = "flaskr/images/pexels-pixabay-53370.jpg"
+    celebrity_image = RekognitionImage.from_file(
+    celebrity_file_name, rekognition_client)
+
+    print(f"Detecting celebrities in {celebrity_image.image_name}...")
+    celebs, others = celebrity_image.recognize_celebrities()
+    print(f"Found {len(celebs)} celebrities.")
+    for celeb in celebs:
+        pprint(celeb.to_dict())
+    show_bounding_boxes(
+        celebrity_image.image['Bytes'],
+        [[celeb.face.bounding_box for celeb in celebs]], ['aqua'])
+    input("Press Enter to continue.")

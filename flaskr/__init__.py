@@ -2,8 +2,7 @@ import os
 
 from flask import Flask
 from flaskr.rekognition_image_detection import RekognitionImage
-from flaskr.rekognition_image_detection import usage_demo
-from flaskr.rekognition_image_detection import face_demo
+from flaskr.rekognition_image_detection import usage_demo, face_demo, celebrity_demo
 
 
 def create_app(test_config=None):
@@ -40,4 +39,9 @@ def create_app(test_config=None):
     @app.route('/rekognition_face_demo')
     def rekognition_face_demo():
         return face_demo()
+
+    # Test
+    @app.route('/rekognition_celebrity_demo')
+    def rekognition_celebrity_demo():
+        return celebrity_demo()
     return app
