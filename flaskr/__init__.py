@@ -2,13 +2,10 @@ import os
 
 from flask import Flask
 from flaskr.rekognition_image_detection import RekognitionImage
-import flaskr.rekognition_image_detection as rki 
+from flaskr.rekognition_image_detection import usage_demo
 
 
 def create_app(test_config=None):
-
-
-
 
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -35,7 +32,7 @@ def create_app(test_config=None):
     def hello():
         return 'Hello, World!'
 
-    @app.route('/rekognition_usage_demo')
+    @app.route('/rekognition_demo')
     def rekognition_usage_demo():
-        return rki.usage_demo()
+        return usage_demo()
     return app
