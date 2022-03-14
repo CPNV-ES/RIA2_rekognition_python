@@ -1,7 +1,6 @@
 import os
-
-from flask import Flask
-from flaskr.rekognition_image_detection import usage_demo, face_demo, celebrity_demo
+from flask import Flask, request
+from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
 
 
 def create_app(test_config=None):
@@ -32,16 +31,12 @@ def create_app(test_config=None):
         return 'Hello, World!'
 
     @app.route('/rekognition_face_demo')
-    def rekognition_face_demo():
-        return face_demo()
+    def face_demo():
+        return face_from_local_file("flaskr/images/pexels-kaique-rocha-109919.jpg")
 
-    @app.route('/rekognition_face/<url>')
-
-    def rekognition_face(url):
-        return "the url is " + str(url)
-
-    # Test
-    @app.route('/rekognition_celebrity_demo')
-    def rekognition_celebrity_demo():
-        return celebrity_demo()
+    @app.route('/rekognition_face', methods=['GET', 'POST'])
+    def rekognition_face():
+        url = request.args.get('url')
+        return face_from_url(url)
+    
     return app

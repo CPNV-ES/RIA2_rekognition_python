@@ -288,6 +288,34 @@ def usage_demo():
     print("Thanks for watching!")
     print('-'*88)
 
+def face_from_url(url):
+    print('-'*88)
+    print("Face Rekognition Demo ")
+    print('-'*88)
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(levelname)s: %(message)s')
+    rekognition_client = boto3.client('rekognition')
+    
+    image_response = requests.get(url)
+    image = RekognitionImage(
+        {'Bytes': image_response.content}, "image", rekognition_client)
+
+    print(f"Detecting faces in {url}...")
+    faces = image.detect_faces()
+    
+    print(f"Found {len(faces)} faces, here are the first three.")
+    for face in faces[:3]:
+        pprint(face.to_dict())
+
+    show_bounding_boxes(
+        image.image['Bytes'], [
+            [face.bounding_box for face in faces]],
+        ['aqua'])
+    
+    print("Thanks for watching!")
+    print('-'*88)
+
 
 def face_demo():
     print('-'*88)
