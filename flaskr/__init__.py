@@ -32,7 +32,7 @@ def create_app(test_config=None):
 
     @app.route('/rekognition_face_demo')
     def face_demo():
-        return face_from_local_file("flaskr/images/pexels-kaique-rocha-109919.jpg")
+        return face_from_local_file("pexels-kaique-rocha-109919.jpg")
 
     @app.route('/rekognition_face', methods=['GET', 'POST'])
     def rekognition_face():

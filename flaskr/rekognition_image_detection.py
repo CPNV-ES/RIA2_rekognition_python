@@ -327,7 +327,7 @@ def face_from_local_file(url):
                         format='%(levelname)s: %(message)s')
     rekognition_client = boto3.client('rekognition')
     
-    file_name = url
+    file_name = "flaskr/images/"+url
 
     image = RekognitionImage.from_file(
         file_name, rekognition_client)
