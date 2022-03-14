@@ -39,4 +39,8 @@ def create_app(test_config=None):
         url = request.args.get('url')
         return face_from_url(url)
     
+    @app.errorhandler(404)
+    def handle_404(e):
+        return 'This route doesn\'t exist :('
+
     return app
