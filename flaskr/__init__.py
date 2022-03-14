@@ -1,7 +1,6 @@
 import os
 
 from flask import Flask
-from flaskr.rekognition_image_detection import RekognitionImage
 from flaskr.rekognition_image_detection import usage_demo, face_demo, celebrity_demo
 
 
