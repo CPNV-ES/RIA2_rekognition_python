@@ -258,8 +258,8 @@ def usage_demo():
     input("Press Enter to continue.")
 
 
-    print(f"Detecting labels in {street_scene_image.image_name}...")
-    labels = street_scene_image.detect_labels(100)
+    print(f"Detecting labels in {image.image_name}...")
+    labels = image.detect_labels(100)
     print(f"Found {len(labels)} labels.")
     for label in labels:
         pprint(label.to_dict())
@@ -272,7 +272,7 @@ def usage_demo():
             box_sets.append([inst['BoundingBox'] for inst in label.instances])
     print(f"Showing bounding boxes for {names} in {colors[:len(names)]}.")
     show_bounding_boxes(
-        street_scene_image.image['Bytes'], box_sets, colors[:len(names)])
+        image.image['Bytes'], box_sets, colors[:len(names)])
     input("Press Enter to continue.")
 
 
@@ -317,7 +317,8 @@ def face_from_url(url):
     print('-'*88)
 
 
-def face_demo():
+
+def face_from_local_file(url):
     print('-'*88)
     print("Face Rekognition Demo ")
     print('-'*88)
@@ -325,19 +326,21 @@ def face_demo():
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(message)s')
     rekognition_client = boto3.client('rekognition')
-    street_scene_file_name = "flaskr/images/pexels-kaique-rocha-109919.jpg"
+    
+    file_name = url
 
-    street_scene_image = RekognitionImage.from_file(
-        street_scene_file_name, rekognition_client)
-    print(f"Detecting faces in {street_scene_image.image_name}...")
-    faces = street_scene_image.detect_faces()
+    image = RekognitionImage.from_file(
+        file_name, rekognition_client)
+
+    print(f"Detecting faces in {image.image_name}...")
+    faces = image.detect_faces()
     
     print(f"Found {len(faces)} faces, here are the first three.")
     for face in faces[:3]:
         pprint(face.to_dict())
 
     show_bounding_boxes(
-        street_scene_image.image['Bytes'], [
+        image.image['Bytes'], [
             [face.bounding_box for face in faces]],
         ['aqua'])
     
