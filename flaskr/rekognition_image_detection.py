@@ -1,6 +1,7 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
 
+
 """
 Purpose
 
@@ -12,6 +13,7 @@ without cloning the GitHub repository, you must first download the image files f
     https://github.com/awsdocs/aws-doc-sdk-examples/tree/master/python/example_code/rekognition/.media
 """
 
+import json
 import logging
 from pprint import pprint
 import boto3
@@ -223,13 +225,6 @@ def usage_demo():
     book_file_name = 'flaskr/images/pexels-christina-morillo-1181671.jpg'
 
 
-
-
-
-
-
-
-
     girl_image_response = requests.get(one_girl_url)
     girl_image = RekognitionImage(
         {'Bytes': girl_image_response.content}, "one-girl", rekognition_client)
@@ -244,8 +239,6 @@ def usage_demo():
             [match.bounding_box for match in matches]],
         ['aqua'])
     input("Press Enter to continue.")
-
-
 
 
     swimwear_image = RekognitionImage.from_bucket(
@@ -317,8 +310,8 @@ def face_from_url(url):
     print('-'*88)
 
 
-
 def face_from_local_file(url, displayImageBoundingBox=False):
+    faces_list = []
     print('-'*88)
     print("Face Rekognition Demo ")
     print('-'*88)
@@ -338,6 +331,7 @@ def face_from_local_file(url, displayImageBoundingBox=False):
     print(f"Found {len(faces)} faces, here are the first three.")
     for face in faces[:3]:
         pprint(face.to_dict())
+        faces_list.append(face.to_dict())
 
     if displayImageBoundingBox :
         show_bounding_boxes(
@@ -347,6 +341,7 @@ def face_from_local_file(url, displayImageBoundingBox=False):
     
     print("Thanks for watching!")
     print('-'*88)
+    return json.dumps(faces_list)
 
     
 
