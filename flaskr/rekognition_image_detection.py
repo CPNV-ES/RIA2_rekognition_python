@@ -318,7 +318,7 @@ def face_from_url(url):
 
 
 
-def face_from_local_file(url):
+def face_from_local_file(url, displayImageBoundingBox=False):
     print('-'*88)
     print("Face Rekognition Demo ")
     print('-'*88)
@@ -339,14 +339,16 @@ def face_from_local_file(url):
     for face in faces[:3]:
         pprint(face.to_dict())
 
-    show_bounding_boxes(
-        image.image['Bytes'], [
-            [face.bounding_box for face in faces]],
-        ['aqua'])
+    if displayImageBoundingBox :
+        show_bounding_boxes(
+            image.image['Bytes'], [
+                [face.bounding_box for face in faces]],
+            ['aqua'])
     
     print("Thanks for watching!")
     print('-'*88)
 
+    
 
 # This is a test
 def celebrity_demo():
