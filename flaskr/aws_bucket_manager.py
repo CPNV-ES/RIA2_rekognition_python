@@ -11,10 +11,9 @@ class AwsBucketManager:
     def __init__(self) -> None:
         self.s3 = boto3.resource('s3')
 
-    async def create_object(self, bucket_url, file_name):
+    async def create_object(self, bucket_url, file):
         try:
-            key = file_name.split('/')[-1]
-            self.s3.Bucket(bucket_url).upload_file(file_name, key)
+            self.s3.Bucket(bucket_url).Object(file.filename).put(Body=file)
         except:
             return 'An error occured.', 400
 

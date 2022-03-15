@@ -1,12 +1,15 @@
+import os
+import datetime
 import tempfile
 import json as js
 import pandas as pd
+
 from flask import Flask, request, jsonify
-import re
 from flaskr.aws_bucket_manager import AwsBucketManager
 import datetime
 import os
 from flask_restx import Api, Resource
+from werkzeug.utils import secure_filename
 
 
 def create_app(test_config=None):
@@ -39,13 +42,16 @@ def create_app(test_config=None):
         def hello():
             return 'Hello, World!'
 
-    @api.route('/upload', methods=['POST'], endpoint='upload')
-    class Image(Resource):
-        async def post():
-            result = await aws_bucket_manager.create_object(
-                os.getenv('BUCKET_URL'), './monkey.jpg')
+    @app.route('/upload', methods=['POST'])
+    async def upload():
+        if 'file' not in request.files:
+            return 'No file.', 400
+        
+        file = request.files['file']
 
-            return result
+        result = await aws_bucket_manager.create_object(os.getenv('BUCKET_NAME'), file) 
+
+        return result
 
     @api.route('/api/generate/sql', methods=['POST'])
     class SQL(Resource):
