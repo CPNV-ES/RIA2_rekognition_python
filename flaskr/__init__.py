@@ -42,16 +42,17 @@ def create_app(test_config=None):
         def hello():
             return 'Hello, World!'
 
-    @app.route('/upload', methods=['POST'])
-    async def upload():
-        if 'file' not in request.files:
-            return 'No file.', 400
+    @api.route('/upload', methods=['POST'])
+    class Image(Resource):
+        async def post():
+            if 'file' not in request.files:
+                return 'No file.', 400
         
-        file = request.files['file']
+            file = request.files['file']
 
-        result = await aws_bucket_manager.create_object(os.getenv('BUCKET_NAME'), file) 
+            result = await aws_bucket_manager.create_object(os.getenv('BUCKET_NAME'), file) 
 
-        return result
+            return result
 
     @api.route('/api/generate/sql', methods=['POST'])
     class SQL(Resource):
