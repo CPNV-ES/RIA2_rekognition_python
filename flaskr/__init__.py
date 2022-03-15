@@ -39,7 +39,7 @@ def create_app(test_config=None):
     # a simple page that says hello
     @api.route('/hello', endpoint='hello')
     class HelloWorld(Resource):
-        def hello():
+        def get():
             return 'Hello, World!'
 
     @api.route('/upload', methods=['POST'])
