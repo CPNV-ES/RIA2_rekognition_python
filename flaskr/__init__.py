@@ -33,15 +33,15 @@ def create_app(test_config=None):
 
     @app.route('/rekognition_face_demo')
     def face_demo():
-        data = face_from_local_file("pexels-pixabay-53370.jpg")
 
-        response = app.response_class(
-        response=data,
-        status=200,
-        mimetype='application/json'
+        url = "pexels-agung-pandit-wiguna-1128316.jpg"
+        shoulDisplayImageBoundingBox = True
+
+        return app.response_class(
+            response=face_from_local_file(url, shoulDisplayImageBoundingBox),
+            status=200,
+            mimetype='application/json'
         )
-
-        return response
 
     @app.route('/rekognition_face', methods=['GET', 'POST'])
     def rekognition_face():

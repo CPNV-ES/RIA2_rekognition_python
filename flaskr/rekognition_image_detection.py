@@ -310,7 +310,7 @@ def face_from_url(url):
     print('-'*88)
 
 
-def face_from_local_file(url, displayImageBoundingBox=False):
+def face_from_local_file(url, shoulDisplayImageBoundingBox):
     faces_list = []
     print('-'*88)
     print("Face Rekognition Demo ")
@@ -333,7 +333,7 @@ def face_from_local_file(url, displayImageBoundingBox=False):
         pprint(face.to_dict())
         faces_list.append(face.to_dict())
 
-    if displayImageBoundingBox :
+    if shoulDisplayImageBoundingBox :
         show_bounding_boxes(
             image.image['Bytes'], [
                 [face.bounding_box for face in faces]],
