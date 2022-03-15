@@ -51,10 +51,10 @@ def create_app(test_config=None):
             mimetype='application/json'
         )
 
-    @app.route('/rekognition_face/<url>/<shoulDisplayImageBoundingBox>')
-    def rekognition_face_show_image(url, shoulDisplayImageBoundingBox):
+    @app.route('/rekognition_face/<url>/DisplayImage')
+    def rekognition_face_show_image(url):
         return app.response_class(
-            response=face_from_local_file(url, json.loads(shoulDisplayImageBoundingBox.lower())),
+            response=face_from_local_file(url, True),
             status=200,
             mimetype='application/json'
         )
