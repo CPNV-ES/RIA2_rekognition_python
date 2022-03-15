@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request
 from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
+from flask import json
 
 
 def create_app(test_config=None):
@@ -32,7 +33,15 @@ def create_app(test_config=None):
 
     @app.route('/rekognition_face_demo')
     def face_demo():
-        return face_from_local_file("pexels-kaique-rocha-109919.jpg", True)
+        data = face_from_local_file("pexels-pixabay-53370.jpg")
+
+        response = app.response_class(
+        response=data,
+        status=200,
+        mimetype='application/json'
+        )
+
+        return response
 
     @app.route('/rekognition_face', methods=['GET', 'POST'])
     def rekognition_face():
