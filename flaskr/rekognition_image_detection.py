@@ -310,7 +310,7 @@ def face_from_url(url):
     print('-'*88)
 
 
-def face_from_local_file(url, shoulDisplayImageBoundingBox):
+def face_from_local_file(url, shoulDisplayImageBoundingBox = False):
     faces_list = []
     print('-'*88)
     print("Face Rekognition Demo ")

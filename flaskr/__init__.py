@@ -1,4 +1,5 @@
 import os
+from pickle import FALSE
 from flask import Flask, request
 from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
 from flask import json
@@ -33,8 +34,7 @@ def create_app(test_config=None):
 
     @app.route('/rekognition_face_demo')
     def face_demo():
-
-        url = "pexels-agung-pandit-wiguna-1128316.jpg"
+        url = "pexels-kaique-rocha-109919.jpg"
         shoulDisplayImageBoundingBox = True
 
         return app.response_class(
@@ -43,11 +43,22 @@ def create_app(test_config=None):
             mimetype='application/json'
         )
 
-    @app.route('/rekognition_face', methods=['GET', 'POST'])
-    def rekognition_face():
-        url = request.args.get('url')
-        return face_from_url(url)
-    
+    @app.route('/rekognition_face/<url>')
+    def rekognition_face(url):
+        return app.response_class(
+            response=face_from_local_file(url),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route('/rekognition_face/<url>/<shoulDisplayImageBoundingBox>')
+    def rekognition_face_show_image(url, shoulDisplayImageBoundingBox):
+        return app.response_class(
+            response=face_from_local_file(url, json.loads(shoulDisplayImageBoundingBox.lower())),
+            status=200,
+            mimetype='application/json'
+        )
+
     @app.errorhandler(404)
     def handle_404(e):
         return 'This route doesn\'t exist :('
