@@ -61,7 +61,7 @@ def create_app(test_config=None):
             mimetype='application/json'
         )
 
-    @app.route('/rekognition_face/<url>/DisplayImage')
+    @app.route('/rekognition_face/display_image/<url>')
     def rekognition_face_show_image(url):
         return app.response_class(
             response=face_from_local_file(url, True),
