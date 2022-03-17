@@ -53,6 +53,16 @@ def create_app(test_config=None):
 
         return result
 
+    @app.route('/delete', methods=['DELETE'])
+    async def remove():
+        try:
+            file_name = request.args.get('filename')
+            result = await aws_bucket_manager.remove_object(os.getenv('BUCKET_NAME'), file_name)
+        except:
+            result = 'Empty filename argument', 400
+
+        return result
+
     @app.route('/api/generate/sql', methods=['POST'])
     async def generate_sql():
         content = request.get_json(silent=True)

@@ -12,6 +12,9 @@ class AwsBucketManager:
         self.s3 = boto3.resource('s3')
 
     async def create_object(self, bucket_name, file):
+        """
+        Create an object on s3
+        """
         try:
             self.s3.Bucket(bucket_name).Object(file.filename).put(Body=file)
         except:
@@ -20,6 +23,9 @@ class AwsBucketManager:
         return 'The file has been uploaded.', 201
 
     def object_exists(self, bucket_name, file_name):
+        """
+        Check if the object exists on s3
+        """
         try:
             self.s3.Bucket(bucket_name).Object(file_name).load()
         except:
@@ -30,5 +36,11 @@ class AwsBucketManager:
     def download_object(self):
         pass
 
-    def remove_object(self):
-        pass
+    async def remove_object(self, bucket_name, file_name):
+        """
+        Delete an object on s3
+        """
+        self.s3.Bucket(bucket_name).Object(file_name).delete()
+
+        return 'The file has been deleted.', 204
+
