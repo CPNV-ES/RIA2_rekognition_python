@@ -1,15 +1,16 @@
 # RIA2_rekognition_python
 
-## Get Started 
+## Get Started
 
 First install the dependencies
+
 ```sh
 pip install -r requirements.txt
 ```
 
 ## Create a virtual python environnment
 
-### On ``Linux``
+### On `Linux`
 
 ```sh
 python3 -m venv venv
@@ -21,7 +22,7 @@ export FLASK_ENV=development
 python -m flask run
 ```
 
-### On ``Windows``
+### On `Windows`
 
 ```sh
 $Env:FLASK_APP="flaskr.py"
@@ -43,3 +44,10 @@ cp .env.exemple .env
 ```
 
 Edit the file with your environment variables
+
+## Testing
+
+```
+python -m unittest tests.test_bucket_manager
+python -m unittest tests.test_bucket_manager.BucketManagerTestCase.test_create_object_with_object_not_existing_success
+```
