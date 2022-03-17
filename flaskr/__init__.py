@@ -63,6 +63,16 @@ def create_app(test_config=None):
 
         return result
 
+    @app.route('/download', methods=['GET'])
+    async def download():
+        try:
+            file_name = request.args.get('filename')
+            result = await aws_bucket_manager.download_object(os.getenv('BUCKET_NAME'), file_name)
+        except:
+            result = 'An error occured.', 400
+            
+        return result
+
     @app.route('/api/generate/sql', methods=['POST'])
     async def generate_sql():
         content = request.get_json(silent=True)

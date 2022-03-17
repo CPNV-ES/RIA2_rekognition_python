@@ -1,5 +1,6 @@
 import boto3
 import asyncio
+import os
 
 
 class AwsBucketManager:
@@ -33,8 +34,13 @@ class AwsBucketManager:
 
         return True
 
-    def download_object(self):
-        pass
+    async def download_object(self, bucket_name, file_name):
+        """
+        Download an object from s3
+        """
+        self.s3.Bucket(bucket_name).Object(file_name).download_file('%s%s' % (os.getenv('STORAGE_FOLDER'), file_name))
+
+        return 'The file has been downloaded.', 200
 
     async def remove_object(self, bucket_name, file_name):
         """
