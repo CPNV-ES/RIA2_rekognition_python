@@ -105,25 +105,44 @@ def create_app(test_config=None):
     async def generate_sql():
         content = request.get_json(silent=True)
 
+        message = ""
+
+        sql_text = ""
+        img_sql = "INSERT INTO image VALUES "
+        analyse_sql = "INSERT INTO analyse VALUES "
+        object_sql = "INSERT INTO object VALUES "
+        attribute_sql = "INSERT INTO attribute VALUES "
+
         try:
             if (not content):
-                raise Exception("No content")
-            df = pd.DataFrame(js.loads(js.dumps(content)))
-            sql_text = get_insert_query_from_df(df, 'rekognition_result')
+                raise Exception('No content')
+            if (not "bucket_url" in content or not content["bucket_url"]):
+                raise Exception(r'No bucket url given, try to add "bucket_url": "s3://kfc.kentuky.com/nugget.jpg" ')
+            if (not "name" in content or not content["name"]):
+                raise Exception(r'No name given, try to add "name": "example_1"')
+            if (not "hash" in content or not content["hash"]):
+                raise Exception(r'No hash given, try to add "hash": "5683b32d9da3fe83cef1e284dc210e768d02b7cf"')
+            if (not "ip" in content or not content["ip"]):
+                raise Exception(r'No ip given, try to add "ip": "8.8.8.8"')
+            if (not "created_at" in content or not content["created_at"]):
+                raise Exception(r'No created_at given, try to add "created_at": "2018-12-25 09:27:53"')
 
-            tmp = tempfile.NamedTemporaryFile(delete=False)
+            # add single quote before and after str
+            def sq(str):
+                return repr(str)
 
-            tmp.write(bytes(sql_text, 'utf-8'))
-            generate_sql_filename = datetime.datetime.now().strftime(
-                "%Y-%m-%d_%H-%M-%S-%f") + "_MAAAAA.sql"
-            object_url = '%s/sql/%s' % (os.getenv("BUCKET_URL"),
-                                        generate_sql_filename)
-            if (os.path.exists(tmp.name)):
-                bucket = AwsBucketManager()
-                await bucket.create_object(object_url, tmp.name)
+            img_sql += "(" + sq(content["bucket_url"]) +  ", " + sq(content["name"]) +  ", " + sq(content["hash"]) +  ");"
+            analyse_sql += "(LAST_INSERT_ID(), " + sq(content["ip"])  + ", " + sq(content["created_at"]) + ");"
 
-            tmp.close()
-            message = object_url
+            for items in content["analyse_content"]:
+                object_sql += "(LAST_INSERT_ID(), 'face')"
+
+                for key, value in items.items():
+                    attribute_sql += "(LAST_INSERT_ID(), " + key + ", " + json.dumps(value) + "),"
+
+                attribute_sql += attribute_sql[:-1] + ";"
+
+            message = [attribute_sql]
         except Exception as e:
             message = str(e)
 
