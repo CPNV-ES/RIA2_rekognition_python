@@ -34,8 +34,9 @@ class BucketManagerTestCase(unittest.TestCase):
         await self.bucket_manager.create_object(self.bucket_name, self.file)
 
         # Then
-        self.assertTrue(await
-                        self.bucket_manager.object_exists(self.bucket_name))
+        self.assertTrue(await self.bucket_manager.object_exists(
+            self.bucket_name, self.file))
 
-    async def tearDown(self) -> None:
+    def tearDown(self) -> None:
+        self.file.close()
         return super().tearDown()
