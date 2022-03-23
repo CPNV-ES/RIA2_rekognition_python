@@ -1,6 +1,5 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
-
 """
 Purpose
 
@@ -14,7 +13,6 @@ import logging
 from PIL import Image, ImageDraw
 
 logger = logging.getLogger(__name__)
-
 
 
 def show_bounding_boxes(image_bytes, box_sets, colors):
@@ -48,14 +46,15 @@ def show_polygons(image_bytes, polygons, color):
     image = Image.open(io.BytesIO(image_bytes))
     draw = ImageDraw.Draw(image)
     for polygon in polygons:
-        draw.polygon([
-            (image.width * point['X'], image.height * point['Y']) for point in polygon],
-            outline=color)
+        draw.polygon([(image.width * point['X'], image.height * point['Y'])
+                      for point in polygon],
+                     outline=color)
     image.show()
 
 
 class RekognitionFace:
     """Encapsulates an Amazon Rekognition face."""
+
     def __init__(self, face, timestamp=None):
         """
         Initializes the face object.
@@ -83,8 +82,10 @@ class RekognitionFace:
         self.mustache = face.get('Mustache', {}).get('Value')
         self.eyes_open = face.get('EyesOpen', {}).get('Value')
         self.mouth_open = face.get('MouthOpen', {}).get('Value')
-        self.emotions = [emo.get('Type') for emo in face.get('Emotions', [])
-                         if emo.get('Confidence', 0) > 50]
+        self.emotions = [
+            emo.get('Type') for emo in face.get('Emotions', [])
+            if emo.get('Confidence', 0) > 50
+        ]
         self.face_id = face.get('FaceId')
         self.image_id = face.get('ImageId')
         self.timestamp = timestamp
@@ -132,6 +133,7 @@ class RekognitionFace:
 
 class RekognitionCelebrity:
     """Encapsulates an Amazon Rekognition celebrity."""
+
     def __init__(self, celebrity, timestamp=None):
         """
         Initializes the celebrity object.
@@ -167,6 +169,7 @@ class RekognitionCelebrity:
 
 class RekognitionPerson:
     """Encapsulates an Amazon Rekognition person."""
+
     def __init__(self, person, timestamp=None):
         """
         Initializes the person object.
@@ -200,6 +203,7 @@ class RekognitionPerson:
 
 class RekognitionLabel:
     """Encapsulates an Amazon Rekognition label."""
+
     def __init__(self, label, timestamp=None):
         """
         Initializes the label object.
@@ -231,6 +235,7 @@ class RekognitionLabel:
 
 class RekognitionModerationLabel:
     """Encapsulates an Amazon Rekognition moderation label."""
+
     def __init__(self, label, timestamp=None):
         """
         Initializes the moderation label object.
@@ -263,6 +268,7 @@ class RekognitionModerationLabel:
 
 class RekognitionText:
     """Encapsulates an Amazon Rekognition text element."""
+
     def __init__(self, text_data):
         """
         Initializes the text object.
