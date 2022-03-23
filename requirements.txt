@@ -17,4 +17,4 @@ toml==0.10.2
 urllib3==1.26.8
 Werkzeug==2.0.3
 yapf==0.32.0
-async==0.6.2
+asgiref==3.5.0
