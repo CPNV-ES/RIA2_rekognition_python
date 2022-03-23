@@ -1,17 +1,14 @@
 import os
-from pickle import FALSE
-from flask import Flask, request
-from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
-from flask import json
 import datetime
 import tempfile
 import json as js
 import pandas as pd
 import re
 
-from flask import Flask, request, jsonify
-from flaskr.aws_bucket_manager import AwsBucketManager
+from flask import Flask, request, jsonify, json
 from werkzeug.utils import secure_filename
+from flaskr.aws_bucket_manager import AwsBucketManager
+from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
 
 
 def create_app(test_config=None):
@@ -38,37 +35,27 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
-
     @app.route('/rekognition_face_demo')
     def face_demo():
         url = "pexels-kaique-rocha-109919.jpg"
         shoulDisplayImageBoundingBox = True
 
-        return app.response_class(
-            response=face_from_local_file(url, shoulDisplayImageBoundingBox),
-            status=200,
-            mimetype='application/json'
-        )
+        return app.response_class(response=face_from_local_file(
+            url, shoulDisplayImageBoundingBox),
+                                  status=200,
+                                  mimetype='application/json')
 
     @app.route('/rekognition_face/<url>')
     def rekognition_face(url):
-        return app.response_class(
-            response=face_from_local_file(url),
-            status=200,
-            mimetype='application/json'
-        )
+        return app.response_class(response=face_from_local_file(url),
+                                  status=200,
+                                  mimetype='application/json')
 
     @app.route('/rekognition_face/display_image/<url>')
     def rekognition_face_show_image(url):
-        return app.response_class(
-            response=face_from_local_file(url, True),
-            status=200,
-            mimetype='application/json'
-        )
+        return app.response_class(response=face_from_local_file(url, True),
+                                  status=200,
+                                  mimetype='application/json')
 
     @app.errorhandler(404)
     def handle_404(e):
@@ -81,34 +68,37 @@ def create_app(test_config=None):
 
         file = request.files['file']
 
-        file_exists = aws_bucket_manager.object_exists(os.getenv('BUCKET_NAME'), file.filename)
+        file_exists = aws_bucket_manager.object_exists(
+            os.getenv('BUCKET_NAME'), file.filename)
 
         if (file_exists):
             result = 'The file already exists.', 400
         else:
             result = await aws_bucket_manager.create_object(
-            os.getenv('BUCKET_NAME'), file)
+                os.getenv('BUCKET_NAME'), file)
 
         return result
 
-    @app.route('/delete', methods=['DELETE'])
-    async def remove():
+    @app.route('/delete/<url>', methods=['DELETE'])
+    async def remove(url):
         try:
-            file_name = request.args.get('filename')
-            result = await aws_bucket_manager.remove_object(os.getenv('BUCKET_NAME'), file_name)
+            file_name = url
+            result = await aws_bucket_manager.remove_object(
+                os.getenv('BUCKET_NAME'), file_name)
         except:
             result = 'Empty filename argument', 400
 
         return result
 
-    @app.route('/download', methods=['GET'])
-    async def download():
+    @app.route('/download/<url>', methods=['GET'])
+    async def download(url):
         try:
-            file_name = request.args.get('filename')
-            result = await aws_bucket_manager.download_object(os.getenv('BUCKET_NAME'), file_name)
+            file_name = url
+            result = await aws_bucket_manager.download_object(
+                os.getenv('BUCKET_NAME'), file_name)
         except:
             result = 'An error occured.', 400
-            
+
         return result
 
     @app.route('/api/generate/sql', methods=['POST'])
