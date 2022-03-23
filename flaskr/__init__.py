@@ -6,7 +6,6 @@ from flask import json
 import datetime
 import tempfile
 import json as js
-import pandas as pd
 
 from flask import Flask, request, jsonify
 from flaskr.aws_bucket_manager import AwsBucketManager
@@ -77,11 +76,37 @@ def create_app(test_config=None):
     async def upload():
         if 'file' not in request.files:
             return 'No file.', 400
-        
+
         file = request.files['file']
 
-        result = await aws_bucket_manager.create_object(os.getenv('BUCKET_NAME'), file) 
+        file_exists = aws_bucket_manager.object_exists(os.getenv('BUCKET_NAME'), file.filename)
 
+        if (file_exists):
+            result = 'The file already exists.', 400
+        else:
+            result = await aws_bucket_manager.create_object(
+            os.getenv('BUCKET_NAME'), file)
+
+        return result
+
+    @app.route('/delete', methods=['DELETE'])
+    async def remove():
+        try:
+            file_name = request.args.get('filename')
+            result = await aws_bucket_manager.remove_object(os.getenv('BUCKET_NAME'), file_name)
+        except:
+            result = 'Empty filename argument', 400
+
+        return result
+
+    @app.route('/download', methods=['GET'])
+    async def download():
+        try:
+            file_name = request.args.get('filename')
+            result = await aws_bucket_manager.download_object(os.getenv('BUCKET_NAME'), file_name)
+        except:
+            result = 'An error occured.', 400
+            
         return result
 
     @app.route('/api/generate/sql', methods=['POST'])
@@ -101,7 +126,7 @@ def create_app(test_config=None):
                 "%Y-%m-%d_%H-%M-%S-%f") + "_MAAAAA.sql"
             object_url = '%s/sql/%s' % (os.getenv("BUCKET_URL"),
                                         generate_sql_filename)
-            if(os.path.exists(tmp.name)):
+            if (os.path.exists(tmp.name)):
                 bucket = AwsBucketManager()
                 await bucket.create_object(object_url, tmp.name)
 
@@ -127,6 +152,7 @@ def create_app(test_config=None):
             values_string += re.sub(r'nan', 'null', str(row))
             values_string += ',\n'
 
-        return insert + columns_string + ')\n     VALUES\n' + values_string[:-2] + ';'
+        return insert + columns_string + ')\n     VALUES\n' + values_string[:
+                                                                            -2] + ';'
 
     return app

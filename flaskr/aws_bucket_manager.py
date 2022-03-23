@@ -1,5 +1,6 @@
 import boto3
 import asyncio
+import os
 
 
 class AwsBucketManager:
@@ -11,19 +12,41 @@ class AwsBucketManager:
     def __init__(self) -> None:
         self.s3 = boto3.resource('s3')
 
-    async def create_object(self, bucket_url, file):
+    async def create_object(self, bucket_name, file):
+        """
+        Create an object on s3
+        """
         try:
-            self.s3.Bucket(bucket_url).Object(file.filename).put(Body=file)
+            self.s3.Bucket(bucket_name).Object(file.filename).put(Body=file)
         except:
             return 'An error occured.', 400
 
         return 'The file has been uploaded.', 201
 
-    def object_exists(self):
-        pass
+    def object_exists(self, bucket_name, file_name):
+        """
+        Check if the object exists on s3
+        """
+        try:
+            self.s3.Bucket(bucket_name).Object(file_name).load()
+        except:
+            return False
 
-    def download_object(self):
-        pass
+        return True
 
-    def remove_object(self):
-        pass
+    async def download_object(self, bucket_name, file_name):
+        """
+        Download an object from s3
+        """
+        self.s3.Bucket(bucket_name).Object(file_name).download_file('%s%s' % (os.getenv('STORAGE_FOLDER'), file_name))
+
+        return 'The file has been downloaded.', 200
+
+    async def remove_object(self, bucket_name, file_name):
+        """
+        Delete an object on s3
+        """
+        self.s3.Bucket(bucket_name).Object(file_name).delete()
+
+        return 'The file has been deleted.', 204
+
