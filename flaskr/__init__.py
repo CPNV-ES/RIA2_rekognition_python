@@ -1,4 +1,8 @@
 import os
+from pickle import FALSE
+from flask import Flask, request
+from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
+from flask import json
 import datetime
 import tempfile
 import json as js
@@ -9,6 +13,7 @@ from werkzeug.utils import secure_filename
 
 
 def create_app(test_config=None):
+
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
@@ -35,6 +40,37 @@ def create_app(test_config=None):
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
+
+    @app.route('/rekognition_face_demo')
+    def face_demo():
+        url = "pexels-kaique-rocha-109919.jpg"
+        shoulDisplayImageBoundingBox = True
+
+        return app.response_class(
+            response=face_from_local_file(url, shoulDisplayImageBoundingBox),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route('/rekognition_face/<url>')
+    def rekognition_face(url):
+        return app.response_class(
+            response=face_from_local_file(url),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route('/rekognition_face/display_image/<url>')
+    def rekognition_face_show_image(url):
+        return app.response_class(
+            response=face_from_local_file(url, True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.errorhandler(404)
+    def handle_404(e):
+        return 'This route doesn\'t exist :('
 
     @app.route('/upload', methods=['POST'])
     async def upload():
