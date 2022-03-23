@@ -128,7 +128,8 @@ def create_app(test_config=None):
                 return repr(str)
 
             sql_text += "INSERT INTO image VALUES (" + sq(content["bucket_url"]) +  ", " + sq(content["name"]) +  ", " + sq(content["hash"]) +  ");"
-            sql_text += "INSERT INTO analyse VALUES (LAST_INSERT_ID(), " + sq(content["ip"])  + ", " + sq("2018/06/18") + ");"
+            sql_text += "INSERT INTO analyse VALUES (LAST_INSERT_ID(), " + sq(content["ip"])  + ", " + sq(content["created_at"]) + ");"
+
 
             sql_text += "DECLARE @ANALYSE AS int = LAST_INSERT_ID();";
             for items in content["analyse_content"]:
