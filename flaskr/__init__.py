@@ -79,6 +79,43 @@ def create_app(test_config=None):
 
         return result
 
+    @app.route('/RequestAnalysis', methods=['POST'])
+    async def RequestAnalysis():
+        if 'file' not in request.files:
+            return 'No file.', 400
+
+
+        file = request.files['file']
+
+        file_exists = aws_bucket_manager.object_exists(
+            os.getenv('BUCKET_NAME'), file.filename)
+
+        if (file_exists):
+            saveResult = 'The file already exists.', 400
+        else:
+            saveResult = await aws_bucket_manager.create_object(
+                os.getenv('BUCKET_NAME'), file)
+
+
+        print(saveResult)
+
+        # If the insert is a success
+        if saveResult == True :
+            downloadResult = await download(file.filename)
+        else :
+            return app.response_class('Impossible to download the file', 500)
+
+        # If the download is a success
+        if downloadResult == True :
+            return app.response_class(response=face_from_local_file(file.filename),
+                                  status=200,
+                                  mimetype='application/json')
+        else :
+            return app.response_class('Impossible to rekognise the face', 500)
+
+        return app.response_class('An error has occured', 500)
+
+
     @app.route('/delete/<url>', methods=['DELETE'])
     async def remove(url):
         try:
@@ -97,9 +134,9 @@ def create_app(test_config=None):
             result = await aws_bucket_manager.download_object(
                 os.getenv('BUCKET_NAME'), file_name)
         except:
-            result = 'An error occured.', 400
+            result = False, 400
 
-        return result
+        return True
 
     @app.route('/api/generate/sql', methods=['POST'])
     async def generate_sql():
