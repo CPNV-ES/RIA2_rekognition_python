@@ -108,10 +108,6 @@ def create_app(test_config=None):
         message = ""
 
         sql_text = ""
-        img_sql = "INSERT INTO image VALUES "
-        analyse_sql = "INSERT INTO analyse VALUES "
-        object_sql = "INSERT INTO object VALUES "
-        attribute_sql = "INSERT INTO attribute VALUES "
 
         try:
             if (not content):
@@ -131,18 +127,22 @@ def create_app(test_config=None):
             def sq(str):
                 return repr(str)
 
-            img_sql += "(" + sq(content["bucket_url"]) +  ", " + sq(content["name"]) +  ", " + sq(content["hash"]) +  ");"
-            analyse_sql += "(LAST_INSERT_ID(), " + sq(content["ip"])  + ", " + sq(content["created_at"]) + ");"
+            sql_text += "INSERT INTO image VALUES (" + sq(content["bucket_url"]) +  ", " + sq(content["name"]) +  ", " + sq(content["hash"]) +  ");"
+            sql_text += "INSERT INTO analyse VALUES (LAST_INSERT_ID(), " + sq(content["ip"])  + ", " + sq(content["created_at"]) + ");"
+
+            
 
             for items in content["analyse_content"]:
-                object_sql += "(LAST_INSERT_ID(), 'face')"
+                sql_text += "INSERT INTO object VALUES (@ANALYSE, 'face');"
+
+                attribute_sql = "INSERT INTO attribute VALUES "
 
                 for key, value in items.items():
-                    attribute_sql += "(LAST_INSERT_ID(), " + key + ", " + json.dumps(value) + "),"
+                    attribute_sql += "(LAST_INSERT_ID(), " + sq(key) + ", " + sq(json.dumps(value)) + "),"
 
-                attribute_sql += attribute_sql[:-1] + ";"
+                sql_text += attribute_sql[:-2] + ";"
 
-            message = [attribute_sql]
+            message = [sql_text]
         except Exception as e:
             message = str(e)
 
