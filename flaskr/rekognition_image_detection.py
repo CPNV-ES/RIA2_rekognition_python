@@ -281,35 +281,6 @@ def usage_demo():
     print("Thanks for watching!")
     print('-'*88)
 
-def face_from_url(url):
-    print('-'*88)
-    print("Face Rekognition Demo ")
-    print('-'*88)
-
-    logging.basicConfig(level=logging.INFO,
-                        format='%(levelname)s: %(message)s')
-    rekognition_client = boto3.client('rekognition')
-    
-    image_response = requests.get(url)
-    image = RekognitionImage(
-        {'Bytes': image_response.content}, "image", rekognition_client)
-
-    print(f"Detecting faces in {url}...")
-    faces = image.detect_faces()
-    
-    print(f"Found {len(faces)} faces, here are the first three.")
-    for face in faces[:3]:
-        pprint(face.to_dict())
-
-    show_bounding_boxes(
-        image.image['Bytes'], [
-            [face.bounding_box for face in faces]],
-        ['aqua'])
-    
-    print("Thanks for watching!")
-    print('-'*88)
-
-
 def face_from_local_file(url, shoulDisplayImageBoundingBox = False):
     faces_list = []
     print('-'*88)
@@ -343,7 +314,39 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox = False):
     print('-'*88)
     return json.dumps(faces_list)
 
+def face_from_url(url, shoulDisplayImageBoundingBox = False):
+    faces_list = []
+    print('-'*88)
+    print("Face Rekognition Demo ")
+    print('-'*88)
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(levelname)s: %(message)s')
+    rekognition_client = boto3.client('rekognition')
     
+    # file_name = "flaskr/images/"+url
+
+    image = RekognitionImage.from_bucket(
+        url, rekognition_client)
+
+    print(f"Detecting faces in {image.image_name}...")
+    faces = image.detect_faces()
+    
+    print(f"Found {len(faces)} faces, here are the first three.")
+    for face in faces[:3]:
+        pprint(face.to_dict())
+        faces_list.append(face.to_dict())
+
+    if shoulDisplayImageBoundingBox :
+        show_bounding_boxes(
+            image.image['Bytes'], [
+                [face.bounding_box for face in faces]],
+            ['aqua'])
+    
+    print("Thanks for watching!")
+    print('-'*88)
+    return json.dumps(faces_list)
+
 
 # This is a test
 def celebrity_demo():
