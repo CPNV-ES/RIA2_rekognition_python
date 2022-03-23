@@ -79,8 +79,8 @@ def create_app(test_config=None):
 
         return result
 
-    @app.route('/RequestAnalysis', methods=['POST'])
-    async def RequestAnalysis():
+    @app.route('/request_analysis', methods=['POST'])
+    async def RequestAnalysis(shouldDisplayImage=False):
         if 'file' not in request.files:
             return 'No file.', 400
 
@@ -107,7 +107,7 @@ def create_app(test_config=None):
 
         # If the download is a success
         if downloadResult == True :
-            return app.response_class(response=face_from_local_file(file.filename),
+            return app.response_class(response=face_from_local_file(file.filename, shouldDisplayImage),
                                   status=200,
                                   mimetype='application/json')
         else :
@@ -115,6 +115,9 @@ def create_app(test_config=None):
 
         return app.response_class('An error has occured', 500)
 
+    @app.route('/display_image/request_analysis', methods=['POST'])
+    async def RequestAnalysisShowImage():
+        return await RequestAnalysis(True)
 
     @app.route('/delete/<url>', methods=['DELETE'])
     async def remove(url):
