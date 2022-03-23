@@ -42,8 +42,8 @@ def create_app(test_config=None):
 
         return app.response_class(response=face_from_local_file(
             url, shoulDisplayImageBoundingBox),
-                                  status=200,
-                                  mimetype='application/json')
+            status=200,
+            mimetype='application/json')
 
     @app.route('/rekognition_face/<url>')
     def rekognition_face(url):
@@ -113,31 +113,38 @@ def create_app(test_config=None):
             if (not content):
                 raise Exception('No content')
             if (not "bucket_url" in content or not content["bucket_url"]):
-                raise Exception(r'No bucket url given, try to add "bucket_url": "s3://kfc.kentuky.com/nugget.jpg" ')
+                raise Exception(
+                    r'No bucket url given, try to add "bucket_url": "s3://kfc.kentuky.com/nugget.jpg" ')
             if (not "name" in content or not content["name"]):
-                raise Exception(r'No name given, try to add "name": "example_1"')
+                raise Exception(
+                    r'No name given, try to add "name": "example_1"')
             if (not "hash" in content or not content["hash"]):
-                raise Exception(r'No hash given, try to add "hash": "5683b32d9da3fe83cef1e284dc210e768d02b7cf"')
+                raise Exception(
+                    r'No hash given, try to add "hash": "5683b32d9da3fe83cef1e284dc210e768d02b7cf"')
             if (not "ip" in content or not content["ip"]):
                 raise Exception(r'No ip given, try to add "ip": "8.8.8.8"')
             if (not "created_at" in content or not content["created_at"]):
-                raise Exception(r'No created_at given, try to add "created_at": "2018-12-25 09:27:53"')
+                raise Exception(
+                    r'No created_at given, try to add "created_at": "2018-12-25 09:27:53"')
 
             # add single quote before and after str
             def sq(str):
                 return repr(str)
 
-            sql_text += "INSERT INTO image VALUES (" + sq(content["bucket_url"]) +  ", " + sq(content["name"]) +  ", " + sq(content["hash"]) +  ");"
-            sql_text += "INSERT INTO analyse VALUES (LAST_INSERT_ID(), " + sq(content["ip"])  + ", " + sq("2018/06/18") + ");"
+            sql_text += "INSERT INTO image VALUES (" + sq(content["bucket_url"]) + ", " + sq(
+                content["name"]) + ", " + sq(content["hash"]) + ");"
+            sql_text += "INSERT INTO analyse VALUES (LAST_INSERT_ID(), " + sq(
+                content["ip"]) + ", " + sq(content["created_at"]) + ");"
 
-            sql_text += "DECLARE @ANALYSE AS int = LAST_INSERT_ID();";
+            sql_text += "DECLARE @ANALYSE AS int = LAST_INSERT_ID();"
             for items in content["analyse_content"]:
                 sql_text += "INSERT INTO object VALUES (@ANALYSE, 'face');"
 
                 attribute_sql = "INSERT INTO attribute VALUES "
 
                 for key, value in items.items():
-                    attribute_sql += "(LAST_INSERT_ID(), " + sq(key) + ", " + sq(json.dumps(value)) + "),"
+                    attribute_sql += "(LAST_INSERT_ID(), " + \
+                        sq(key) + ", " + sq(json.dumps(value)) + "),"
 
                 sql_text += attribute_sql[:-2] + ";"
 
