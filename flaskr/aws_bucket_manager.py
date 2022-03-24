@@ -20,7 +20,7 @@ class AwsBucketManager:
         except:
             return 'An error occured.', 400
 
-        return 'The file has been uploaded.', 201
+        return True
 
     def object_exists(self, bucket_name, file_name):
         """

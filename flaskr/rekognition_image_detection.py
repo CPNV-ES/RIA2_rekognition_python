@@ -280,7 +280,7 @@ def usage_demo():
     print('-' * 88)
 
 
-def face_from_url(url):
+def face_from_url(url, shoulDisplayImageBoundingBox):
     print('-' * 88)
     print("Face Rekognition Demo ")
     print('-' * 88)
@@ -293,18 +293,24 @@ def face_from_url(url):
     image = RekognitionImage({'Bytes': image_response.content}, "image",
                              rekognition_client)
 
-    print(f"Detecting faces in {url}...")
+    print(f"Detecting faces in {image.image_name}...")
     faces = image.detect_faces()
 
     print(f"Found {len(faces)} faces, here are the first three.")
     for face in faces[:3]:
         pprint(face.to_dict())
+        faces_list.append(face.to_dict())
 
-    show_bounding_boxes(image.image['Bytes'],
-                        [[face.bounding_box for face in faces]], ['aqua'])
-
+    if shoulDisplayImageBoundingBox :
+        show_bounding_boxes(
+            image.image['Bytes'], [
+                [face.bounding_box for face in faces]],
+            ['aqua'])
+    
     print("Thanks for watching!")
-    print('-' * 88)
+    print('-'*88)
+    
+    return json.dumps(faces_list)
 
 
 def face_from_local_file(url, shoulDisplayImageBoundingBox=False):
