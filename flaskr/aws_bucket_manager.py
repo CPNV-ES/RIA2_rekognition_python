@@ -11,7 +11,7 @@ class AwsBucketManager:
     def __init__(self) -> None:
         self.s3 = boto3.resource('s3')
 
-    async def create_object(self, bucket_name, file):
+    async def create_object_with_multipart(self, bucket_name, file):
         """
         Create an object on s3
         """
@@ -22,7 +22,20 @@ class AwsBucketManager:
 
         return True
 
-    def object_exists(self, bucket_name, file_name):
+    async def create_object(self, bucket_name, file_path):
+        """
+        Create an object on s3
+        """
+        try:
+            file_name = file_path.split("/")[-1]
+            self.s3.Bucket(bucket_name).Object(
+                file_name).upload_file(file_path)
+        except:
+            return False
+
+        return True
+
+    async def object_exists(self, bucket_name, file_name):
         """
         Check if the object exists on s3
         """

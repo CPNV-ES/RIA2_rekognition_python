@@ -1,5 +1,4 @@
 import unittest
-import asyncio
 import os
 
 from flaskr.aws_bucket_manager import AwsBucketManager
@@ -14,39 +13,35 @@ class BucketManagerTestCase(unittest.IsolatedAsyncioTestCase):
         """
         This test method initializes the context before each test method run.
         """
-        self.bucket_name = os.getenv('BUCKET_NAME')
-        self.file = open("C:/Users/Dylan.OLIVEIRA-RAMOS/Downloads/monkey.jpg",
-                         "rb")
-        self.object_name = "monkey.jpg"
         self.bucket_manager = AwsBucketManager()
+        # Should be -> os.getenv('BUCKET_NAME') but it is not working
+        self.bucket_name = 'ria2python.actualit.info'
+        self.file_path = 'C:/Users/Dylan.OLIVEIRA-RAMOS/Downloads/monkey.jpg'
+        self.object_name = self.file_path.split("/")[-1]
 
-    async def test_create_object_with_object_not_existing_success(self):
+    async def test_create_not_existing_object(self):
         """
         This test method checks the method in charge of creating a new object
-        We try to create a new object
         """
         # Given
-        self.assertFalse(
-            self.bucket_manager.object_exists(self.bucket_name,
-                                              self.object_name))
+        self.assertFalse(await self.bucket_manager.object_exists(self.bucket_name,
+                                                                 self.object_name))
 
         # When
-        await self.bucket_manager.create_object(self.bucket_name, self.file)
+        await self.bucket_manager.create_object(self.bucket_name, self.file_path)
 
         # Then
-        self.assertTrue(
-            self.bucket_manager.object_exists(self.bucket_name, self.file))
+        self.assertTrue(await self.bucket_manager.object_exists(self.bucket_name, self.object_name))
 
-    async def test_download_object_nominal_case_success(self):
+    async def test_download_existing_object(self):
         """
-        This test method checks the method in charge of uploading item in an existing bucket
+        This test method checks the method in charge of downloading an object from an existing bucket
         """
         # Given
-        await self.bucket_manager.create_object(self.bucket_name, self.file)
-
-        self.assertTrue(
-            self.bucket_manager.object_exists(self.bucket_name,
-                                              self.object_name))
+        print(self.object_name, self.bucket_name)
+        await self.bucket_manager.create_object(self.bucket_name, self.file_path)
+        self.assertTrue(await self.bucket_manager.object_exists(self.bucket_name,
+                                                                self.object_name))
 
         # When
         await self.bucket_manager.download_object(self.bucket_name,
@@ -57,21 +52,50 @@ class BucketManagerTestCase(unittest.IsolatedAsyncioTestCase):
             os.path.exists('%s%s' %
                            (os.getenv('STORAGE_FOLDER'), self.object_name)))
 
-    async def test_is_object_exists_nominal_case_success(self):
+    async def test_object_existing(self):
         """
         This test method checks the method in charge of testing the existence of an object
         """
         # Given
-        await self.bucket_manager.create_object(self.bucket_name, self.file)
+        await self.bucket_manager.create_object(self.bucket_name, self.file_path)
 
         # When
-        actual_result = await self.bucket_manager.object_exists(
+        result = await self.bucket_manager.object_exists(
             self.bucket_name, self.object_name)
 
         # Then
-        self.assertTrue(actual_result)
+        self.assertTrue(result)
 
-    def tearDown(self) -> None:
-        self.file.close()
-        self.bucket_manager.remove_object(self.bucket_name, self.object_name)
+    async def test_object_not_existing(self):
+        """
+        This test method checks the method in charge of testing the non existence of an object
+        """
+        # Given
+        await self.bucket_manager.create_object(self.bucket_name, self.file_path)
+        self.assertTrue(await self.bucket_manager.object_exists(self.bucket_name, self.object_name))
+        not_existing_file = "notexistingfile.jpg"
+
+        # When
+        result = await self.bucket_manager.object_exists(
+            self.bucket_name, not_existing_file)
+
+        # Then
+        self.assertFalse(result)
+
+    async def test_remove_existing_object(self):
+        """
+        This test method checks the method in charge of removing an existing object
+        """
+        # Given
+        await self.bucket_manager.create_object(self.bucket_name, self.file_path)
+        self.assertTrue(await self.bucket_manager.object_exists(self.bucket_name, self.object_name))
+
+        # When
+        await self.bucket_manager.remove_object(self.bucket_name, self.object_name)
+
+        # Then
+        self.assertFalse(await self.bucket_manager.object_exists(self.bucket_name, self.object_name))
+
+    async def asyncTearDown(self):
+        await self.bucket_manager.remove_object(self.bucket_name, self.object_name)
         return super().tearDown()
