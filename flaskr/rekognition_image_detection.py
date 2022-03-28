@@ -85,8 +85,7 @@ class RekognitionImage:
         :return: The list of faces found in the image.
         """
         try:
-            response = self.rekognition_client.detect_faces(Image=self.image,
-                                                            Attributes=['ALL'])
+            response = self.rekognition_client.detect_faces(Image=self.image, Attributes=['ALL'])
             faces = [RekognitionFace(face) for face in response['FaceDetails']]
             logger.info("Detected %s faces.", len(faces))
         except ClientError:
