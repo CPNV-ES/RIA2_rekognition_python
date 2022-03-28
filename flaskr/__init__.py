@@ -35,23 +35,14 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    @app.route('/rekognition_face_demo')
-    def face_demo():
-        url = "pexels-kaique-rocha-109919.jpg"
-        shoulDisplayImageBoundingBox = True
 
-        return app.response_class(response=face_from_local_file(
-            url, shoulDisplayImageBoundingBox),
-                                  status=200,
-                                  mimetype='application/json')
-
-    @app.route('/rekognition_face/<url>')
+    @app.route('/api/detect/face/<url>')
     def rekognition_face(url):
         return app.response_class(response=face_from_local_file(url),
                                   status=200,
                                   mimetype='application/json')
 
-    @app.route('/rekognition_face/display_image/<url>')
+    @app.route('/api/detect/face/display_image/<url>')
     def rekognition_face_show_image(url):
         return app.response_class(response=face_from_local_file(url, True),
                                   status=200,
@@ -79,7 +70,7 @@ def create_app(test_config=None):
 
         return result
 
-    @app.route('/request_analysis', methods=['POST'])
+    @app.route('/api/request_analysis', methods=['POST'])
     async def RequestAnalysis(shouldDisplayImage=False):
         if 'file' not in request.files:
             return 'No file.', 400
@@ -115,7 +106,7 @@ def create_app(test_config=None):
 
         return app.response_class('An error has occured', 500)
 
-    @app.route('/display_image/request_analysis', methods=['POST'])
+    @app.route('/api/display_image/request_analysis', methods=['POST'])
     async def RequestAnalysisShowImage():
         return await RequestAnalysis(True)
 
