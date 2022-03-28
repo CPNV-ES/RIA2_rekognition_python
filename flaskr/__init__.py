@@ -35,15 +35,6 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    @app.route('/rekognition_face_demo')
-    def face_demo():
-        url = "pexels-kaique-rocha-109919.jpg"
-        shoulDisplayImageBoundingBox = True
-
-        return app.response_class(response=face_from_local_file(
-            url, shoulDisplayImageBoundingBox),
-                                  status=200,
-                                  mimetype='application/json')
 
     @app.route('/rekognition_face/<url>')
     def rekognition_face(url):
