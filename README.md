@@ -7,6 +7,24 @@ First install the dependencies
 ```sh
 pip install -r requirements.txt
 ```
+## Configure the `.env` file
+
+The `.env` file is a file fill up with the secure configurations to link your project with AWS.
+
+1. Copy Past the file `.env_example` and rename it to `.env`
+
+2. Configure it
+
+```js
+BUCKET_NAME=bucket
+BUCKET_URL=s3://${BUCKET_NAME}.${DOMAIN}
+BUCKET_FOLDER=default_storage
+AWS_ACCESS_KEY_ID=aws_access_key_id // Your aws access key id
+AWS_SECRET_ACCESS_KEY=aws_secret_access_key // Your aws secret access key
+AWS_DEFAULT_REGION=eu-central-1
+STORAGE_FOLDER=C:/ //The storage folder where images will be downloaded
+```
+
 
 ## Create a virtual python environnment
 
@@ -47,7 +65,7 @@ Edit the file with your environment variables.
 
 ## Via Script
 
-You also could start the following script :
+You also could start the following script to run the environment :
 
 ```
 .\winStart.ps1
