@@ -1,6 +1,6 @@
 # RIA2_rekognition_python
 
-## Get Started
+# Get Started
 
 First install the dependencies
 
@@ -43,7 +43,15 @@ flask run
 cp .env.exemple .env
 ```
 
-Edit the file with your environment variables
+Edit the file with your environment variables.
+
+## Via Script
+
+You also could start the following script :
+
+```
+.\winStart.ps1
+```
 
 ---
 # Testing
