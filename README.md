@@ -45,9 +45,20 @@ cp .env.exemple .env
 
 Edit the file with your environment variables
 
-## Testing
+---
+# Testing
 
 ```
 python -m unittest tests.test_bucket_manager
 python -m unittest tests.test_bucket_manager.BucketManagerTestCase.test_create_object_with_object_not_existing_success
 ```
+
+---
+# Commands
+
+## Detect face
+
+```
+aws rekognition detect-faces ^ --image "{\"S3Object\":{\"Bucket\":\"ria2python.actualit.info\",\"Name\":\"cake.jpg\"}}"
+```
+
