@@ -17,7 +17,6 @@ from pprint import pprint
 import boto3
 from botocore.exceptions import ClientError
 from flask import request as requests
-
 from flaskr.rekognition_objects import RekognitionFace, RekognitionCelebrity, RekognitionLabel, RekognitionModerationLabel, RekognitionText, show_bounding_boxes, show_polygons
 
 logger = logging.getLogger(__name__)
@@ -231,8 +230,7 @@ def face_from_url(url, shoulDisplayImageBoundingBox):
 
     print(f"Found {len(faces)} faces, here are the first three.")
     for face in faces[:3]:
-        pprint(face.to_dict())
-        faces_list.append(face.to_dict())
+        faces_list.append(face)
 
     if shoulDisplayImageBoundingBox :
         show_bounding_boxes(
@@ -258,12 +256,8 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
 
     image = RekognitionImage.from_file(file_name, rekognition_client)
 
-    faces = image.detect_faces()
-
-    for face in faces[:3]:
-        pprint(face.to_dict())
-        faces_list.append(face.to_dict())
-
+    faces = image.detect_faces()             
+        
     # Display the image and bounding boxes of each face.
     if shoulDisplayImageBoundingBox:
         show_bounding_boxes(image.image['Bytes'],
@@ -274,8 +268,16 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
     if args is not None:
         selectedAttributes = []
 
-        #arg = arg.split(',')
+        #arg_list = args.split(',')
 
+        for face in faces[:3]:
+            faces_list.append(face.to_dict_args())
+
+
+        #return json.dumps(faces_list)
+
+        # for each args
+        #for arg in arg_list:
         for face in faces_list:
             # get the interested attribute with the argument
             selectedAttributes.append(face[args])
@@ -283,7 +285,10 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
         return json.dumps(selectedAttributes)
 
     else:
-        return json.dumps(faces_list)
+
+        for face in faces[:3]:
+            faces_list.append(face.to_dict())
+        return faces_list
 
 # This is a test
 def celebrity_demo():
