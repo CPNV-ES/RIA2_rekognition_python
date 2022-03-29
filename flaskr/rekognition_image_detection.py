@@ -269,24 +269,18 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
         show_bounding_boxes(image.image['Bytes'],
                             [[face.bounding_box for face in faces]], ['aqua'])
 
-    # If args is not None, then it is a list of arguments
-    # split the args into list
+    # If arg is not None, then it is a list of arguments
+    # split the arg into list
     if args is not None:
-        faces_args_list = []
+        selectedAttributes = []
 
-        args = args.split(',')
+        #arg = arg.split(',')
 
-        return args
-        # For all arguments
-        # Extract the json value from the argument
+        for face in faces_list:
+            # get the interested attribute with the argument
+            selectedAttributes.append(face[args])
 
-        '''
-                json_object = json.loads(faces)
-        for arg in args:
-            faces_args_list.append(json_object[arg].to_dict())
-        return json.dumps(faces_args_list)
-        '''
-        return args
+        return json.dumps(selectedAttributes)
 
     else:
         return json.dumps(faces_list)
