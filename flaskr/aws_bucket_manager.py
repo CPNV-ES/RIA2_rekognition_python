@@ -10,6 +10,9 @@ class AwsBucketManager:
 
     def __init__(self) -> None:
         self.s3 = boto3.resource('s3')
+        self.client = boto3.client('s3')
+        self.bucket_name = os.getenv('BUCKET_NAME')
+        self.storage_folder = os.getenv('STORAGE_FOLDER')
 
     async def create_object_with_multipart(self, bucket_name, file):
         """
@@ -22,27 +25,62 @@ class AwsBucketManager:
 
         return True
 
-    async def create_object(self, bucket_name, file_path):
+    async def create_object(self, object_name):
         """
-        Create an object on s3
+        Create a bucket or an object on s3
+        object_name => bucket_name or file_path
         """
+        s3_bucket_exists_waiter = self.client.get_waiter('bucket_exists')
+        s3_object_exists_waiter = self.client.get_waiter('object_exists')
+
         try:
-            file_name = file_path.split("/")[-1]
-            self.s3.Bucket(bucket_name).Object(
-                file_name).upload_file(file_path)
+            self.s3.create_bucket(Bucket=object_name, CreateBucketConfiguration={'LocationConstraint': os.getenv(
+                'AWS_DEFAULT_REGION')})
+            # Retrieve waiter instance that will wait till a specified S3 bucket exists
+            s3_bucket_exists_waiter.wait(Bucket=object_name)
         except:
-            return False
+            if self.object_exists(self.bucket_name):
+                try:
+                    file_name = object_name.split("/")[-1]
+                    self.s3.Bucket(self.bucket_name).Object(
+                        file_name).upload_file(object_name)
+
+                    # Retrieve waiter instance that will wait till a specified S3 object exists
+                    s3_object_exists_waiter.wait(
+                        Bucket=self.bucket_name, Key=object_name)
+                except:
+                    return False
+            else:
+                try:
+                    self.s3.create_bucket(Bucket=self.bucket_name, CreateBucketConfiguration={'LocationConstraint': os.getenv(
+                        'AWS_DEFAULT_REGION')})
+                    # Retrieve waiter instance that will wait till a specified S3 bucket exists
+                    s3_bucket_exists_waiter.wait(Bucket=self.bucket_name)
+
+                    file_name = object_name.split("/")[-1]
+                    self.s3.Bucket(self.bucket_name).Object(
+                        file_name).upload_file(object_name)
+
+                    # Retrieve waiter instance that will wait till a specified S3 object exists
+                    s3_object_exists_waiter.wait(
+                        Bucket=self.bucket_name, Key=object_name)
+                except:
+                    return False
 
         return True
 
-    async def object_exists(self, bucket_name, file_name):
+    async def object_exists(self, object_name):
         """
-        Check if the object exists on s3
+        Check if the bucket or the object exists on s3
         """
         try:
-            self.s3.Bucket(bucket_name).Object(file_name).load()
+            self.client.head_bucket(Bucket=object_name)
         except:
-            return False
+            try:
+                self.s3.Bucket(self.bucket_name
+                               ).Object(object_name).load()
+            except:
+                return False
 
         return True
 
@@ -51,14 +89,20 @@ class AwsBucketManager:
         Download an object from s3
         """
         self.s3.Bucket(bucket_name).Object(file_name).download_file(
-            '%s%s' % (os.getenv('STORAGE_FOLDER'), file_name))
+            '%s%s' % (self.storage_folder, file_name))
 
         return 'The file has been downloaded.', 200
 
-    async def remove_object(self, bucket_name, file_name):
+    async def remove_object(self, object_name):
         """
         Delete an object on s3
         """
-        self.s3.Bucket(bucket_name).Object(file_name).delete()
+        try:
+            self.client.delete_bucket(Bucket=object_name)
+        except:
+            try:
+                self.s3.Bucket(self.bucket_name).Object(object_name).delete()
+            except:
+                return False
 
-        return 'The file has been deleted.', 204
+        return True

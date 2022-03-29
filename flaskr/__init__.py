@@ -74,8 +74,10 @@ def create_app(test_config=None):
         if (file_exists):
             result = 'The file already exists.', 400
         else:
-            result = await aws_bucket_manager.create_object(
+            result = await aws_bucket_manager.create_object_with_multipart(
                 os.getenv('BUCKET_NAME'), file)
+
+        # TODO send link to face detector, facedetect(link, params)
 
         return result
 
