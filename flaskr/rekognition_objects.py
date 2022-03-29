@@ -11,6 +11,7 @@ viewer.
 import io
 import logging
 from PIL import Image, ImageDraw
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -91,72 +92,7 @@ class RekognitionFace:
         self.timestamp = timestamp
 
     def to_dict(self):
-        """
-        Renders some of the face data to a dict.
-
-        :return: A dict that contains the face data.
-        """
-        rendering = {}
-        if self.bounding_box is not None:
-            rendering['bounding_box'] = self.bounding_box
-        if self.age_range is not None:
-            rendering['age'] = f'{self.age_range[0]} - {self.age_range[1]}'
-        if self.gender is not None:
-            rendering['gender'] = self.gender
-        if self.emotions:
-            rendering['emotions'] = self.emotions
-        if self.face_id is not None:
-            rendering['face_id'] = self.face_id
-        if self.image_id is not None:
-            rendering['image_id'] = self.image_id
-        if self.timestamp is not None:
-            rendering['timestamp'] = self.timestamp
-        
-        if self.smile is not None:
-            rendering['smile'] = self.smile
-
-        if self.eyeglasses is not None:
-            rendering['eyeglasses'] = self.eyeglasses
-        
-        if self.sunglasses is not None:
-            rendering['sunglasses'] = self.sunglasses
-        
-        if self.beard is not None:
-            rendering['beard'] = self.beard
-
-        if self.mustache is not None:
-            rendering['mustache'] = self.mustache
-        
-        if self.eyes_open is not None:
-            rendering['eyes_open'] = self.eyes_open
-
-        if self.mouth_open is not None:
-            rendering['mouth_open'] = self.mouth_open
-        
-        if self.pose is not None:
-            rendering['pose'] = self.pose
-        
-        if self.quality is not None:
-            rendering['quality'] = self.quality
-
-        has = []
-        if self.smile:
-            has.append('smile')
-        if self.eyeglasses:
-            has.append('eyeglasses')
-        if self.sunglasses:
-            has.append('sunglasses')
-        if self.beard:
-            has.append('beard')
-        if self.mustache:
-            has.append('mustache')
-        if self.eyes_open:
-            has.append('open eyes')
-        if self.mouth_open:
-            has.append('open mouth')
-        if has:
-            rendering['has'] = has
-        return rendering
+        return json.dumps(self.__dict__)
 
 
 class RekognitionCelebrity:
