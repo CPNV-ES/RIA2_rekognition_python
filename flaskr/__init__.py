@@ -42,6 +42,12 @@ def create_app(test_config=None):
                                   status=200,
                                   mimetype='application/json')
 
+    @app.route('/api/detect/face/<url>/<args>')
+    def rekognition_face_args(url, args):
+        return app.response_class(response=face_from_local_file(url, False, args),
+                                  status=200,
+                                  mimetype='application/json')
+
     @app.route('/api/detect/face/display_image/<url>')
     def rekognition_face_show_image(url):
         return app.response_class(response=face_from_local_file(url, True),
