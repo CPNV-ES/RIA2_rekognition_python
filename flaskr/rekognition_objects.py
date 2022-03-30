@@ -11,7 +11,7 @@ viewer.
 import io
 import logging
 from PIL import Image, ImageDraw
-
+import json
 logger = logging.getLogger(__name__)
 
 
@@ -91,6 +91,10 @@ class RekognitionFace:
         self.timestamp = timestamp
 
     def to_dict(self):
+        return json.dumps(self.__dict__)
+
+    def to_dict_args(self):
+
         """
         Renders some of the face data to a dict.
 
