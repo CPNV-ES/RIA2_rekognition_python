@@ -1,28 +1,34 @@
 import boto3
 import os
 
+from werkzeug.utils import secure_filename
+
 
 class AwsBucketManager:
     """
     Aws Bucket Manager using s3 resource
-    Useful link : https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#object
+    Useful link : https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#client
     """
 
     def __init__(self) -> None:
         self.s3 = boto3.client('s3')
         self.bucket_name = os.getenv('BUCKET_NAME')
         self.storage_folder = os.getenv('STORAGE_FOLDER')
+        self.s3_default_region = os.getenv('AWS_DEFAULT_REGION')
 
-    async def create_object_with_multipart(self, bucket_name, file):
+    async def upload_file(self, file):
         """
-        Create an object on s3
+        Create an object on s3 using a multipart upload
         """
-        try:
-            self.s3.Bucket(bucket_name).Object(file.filename).put(Body=file)
-        except:
-            return 'An error occured.', 400
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(self.storage_folder, filename))
+        file_path = '%s%s' % (self.storage_folder, filename)
 
-        return True
+        result = await self.create_object(file_path)
+
+        os.remove('%s%s' % (self.storage_folder, filename))
+
+        return result
 
     async def create_object(self, object_name):
         """
@@ -33,8 +39,8 @@ class AwsBucketManager:
         s3_object_exists_waiter = self.s3.get_waiter('object_exists')
 
         try:
-            self.s3.create_bucket(Bucket=object_name, CreateBucketConfiguration={'LocationConstraint': os.getenv(
-                'AWS_DEFAULT_REGION')})
+            self.s3.create_bucket(Bucket=object_name, CreateBucketConfiguration={
+                                  'LocationConstraint': self.s3_default_region})
             # Retrieve waiter instance that will wait till a specified S3 bucket exists
             s3_bucket_exists_waiter.wait(Bucket=object_name, WaiterConfig={
                                          'Delay': 2, 'MaxAttempts': 10})
@@ -52,8 +58,8 @@ class AwsBucketManager:
                     return False
             else:
                 try:
-                    self.s3.create_bucket(Bucket=self.bucket_name, CreateBucketConfiguration={'LocationConstraint': os.getenv(
-                        'AWS_DEFAULT_REGION')})
+                    self.s3.create_bucket(Bucket=self.bucket_name, CreateBucketConfiguration={
+                                          'LocationConstraint': self.s3_default_region})
                     # Retrieve waiter instance that will wait till a specified S3 bucket exists
                     s3_bucket_exists_waiter.wait(Bucket=self.bucket_name, WaiterConfig={
                                                  'Delay': 2, 'MaxAttempts': 10})
@@ -98,7 +104,7 @@ class AwsBucketManager:
 
     async def remove_object(self, object_name):
         """
-        Delete an object on s3
+        Delete a bucket or an object on s3
         """
         s3_resource = boto3.resource('s3')
 
