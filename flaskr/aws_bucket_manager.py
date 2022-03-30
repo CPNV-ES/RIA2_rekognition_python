@@ -9,8 +9,7 @@ class AwsBucketManager:
     """
 
     def __init__(self) -> None:
-        self.s3 = boto3.resource('s3')
-        self.client = boto3.client('s3')
+        self.s3 = boto3.client('s3')
         self.bucket_name = os.getenv('BUCKET_NAME')
         self.storage_folder = os.getenv('STORAGE_FOLDER')
 
@@ -30,8 +29,8 @@ class AwsBucketManager:
         Create a bucket or an object on s3
         object_name => bucket_name or file_path
         """
-        s3_bucket_exists_waiter = self.client.get_waiter('bucket_exists')
-        s3_object_exists_waiter = self.client.get_waiter('object_exists')
+        s3_bucket_exists_waiter = self.s3.get_waiter('bucket_exists')
+        s3_object_exists_waiter = self.s3.get_waiter('object_exists')
 
         try:
             self.s3.create_bucket(Bucket=object_name, CreateBucketConfiguration={'LocationConstraint': os.getenv(
@@ -43,8 +42,8 @@ class AwsBucketManager:
             if await self.object_exists(self.bucket_name):
                 try:
                     file_name = object_name.split("/")[-1]
-                    self.s3.Bucket(self.bucket_name).Object(
-                        file_name).upload_file(object_name)
+                    self.s3.put_object(Bucket=self.bucket_name,
+                                       Key=file_name, Body=object_name)
 
                     # Retrieve waiter instance that will wait till a specified S3 object exists
                     s3_object_exists_waiter.wait(
@@ -60,8 +59,8 @@ class AwsBucketManager:
                                                  'Delay': 2, 'MaxAttempts': 10})
 
                     file_name = object_name.split("/")[-1]
-                    self.s3.Bucket(self.bucket_name).Object(
-                        file_name).upload_file(object_name)
+                    self.s3.put_object(Bucket=self.bucket_name,
+                                       Key=file_name, Body=object_name)
 
                     # Retrieve waiter instance that will wait till a specified S3 object exists
                     s3_object_exists_waiter.wait(
@@ -76,11 +75,10 @@ class AwsBucketManager:
         Check if the bucket or the object exists on s3
         """
         try:
-            self.client.head_bucket(Bucket=object_name)
+            self.s3.head_bucket(Bucket=object_name)
         except:
             try:
-                self.s3.Bucket(self.bucket_name
-                               ).Object(object_name).load()
+                self.s3.head_object(Bucket=self.bucket_name, Key=object_name)
             except:
                 return False
 
@@ -91,8 +89,8 @@ class AwsBucketManager:
         Download an object from s3
         """
         try:
-            self.s3.Bucket(self.bucket_name).Object(object_name).download_file(
-                '%s%s' % (self.storage_folder, object_name))
+            self.s3.download_file(self.bucket_name, object_name, '%s%s' % (
+                self.storage_folder, object_name))
         except:
             return False
 
@@ -102,12 +100,15 @@ class AwsBucketManager:
         """
         Delete an object on s3
         """
+        s3_resource = boto3.resource('s3')
+
         try:
-            self.s3.Bucket(self.bucket_name).objects.all().delete()
-            self.client.delete_bucket(Bucket=object_name)
+            s3_resource.Bucket(self.bucket_name).objects.all().delete()
+            self.s3.delete_bucket(Bucket=object_name)
         except:
             try:
-                self.s3.Bucket(self.bucket_name).Object(object_name).delete()
+                s3_resource.Bucket(self.bucket_name).Object(
+                    object_name).delete()
             except:
                 return False
 
