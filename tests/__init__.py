@@ -1,1 +1,0 @@
-from flaskr.aws_bucket_manager import AwsBucketManager
