@@ -37,9 +37,10 @@ class AwsBucketManager:
             self.s3.create_bucket(Bucket=object_name, CreateBucketConfiguration={'LocationConstraint': os.getenv(
                 'AWS_DEFAULT_REGION')})
             # Retrieve waiter instance that will wait till a specified S3 bucket exists
-            s3_bucket_exists_waiter.wait(Bucket=object_name)
+            s3_bucket_exists_waiter.wait(Bucket=object_name, WaiterConfig={
+                                         'Delay': 2, 'MaxAttempts': 10})
         except:
-            if self.object_exists(self.bucket_name):
+            if await self.object_exists(self.bucket_name):
                 try:
                     file_name = object_name.split("/")[-1]
                     self.s3.Bucket(self.bucket_name).Object(
@@ -47,7 +48,7 @@ class AwsBucketManager:
 
                     # Retrieve waiter instance that will wait till a specified S3 object exists
                     s3_object_exists_waiter.wait(
-                        Bucket=self.bucket_name, Key=object_name)
+                        Bucket=self.bucket_name, Key=object_name, WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
                 except:
                     return False
             else:
@@ -55,7 +56,8 @@ class AwsBucketManager:
                     self.s3.create_bucket(Bucket=self.bucket_name, CreateBucketConfiguration={'LocationConstraint': os.getenv(
                         'AWS_DEFAULT_REGION')})
                     # Retrieve waiter instance that will wait till a specified S3 bucket exists
-                    s3_bucket_exists_waiter.wait(Bucket=self.bucket_name)
+                    s3_bucket_exists_waiter.wait(Bucket=self.bucket_name, WaiterConfig={
+                                                 'Delay': 2, 'MaxAttempts': 10})
 
                     file_name = object_name.split("/")[-1]
                     self.s3.Bucket(self.bucket_name).Object(
@@ -63,7 +65,7 @@ class AwsBucketManager:
 
                     # Retrieve waiter instance that will wait till a specified S3 object exists
                     s3_object_exists_waiter.wait(
-                        Bucket=self.bucket_name, Key=object_name)
+                        Bucket=self.bucket_name, Key=object_name, WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
                 except:
                     return False
 
@@ -84,20 +86,24 @@ class AwsBucketManager:
 
         return True
 
-    async def download_object(self, bucket_name, file_name):
+    async def download_object(self, object_name):
         """
         Download an object from s3
         """
-        self.s3.Bucket(bucket_name).Object(file_name).download_file(
-            '%s%s' % (self.storage_folder, file_name))
+        try:
+            self.s3.Bucket(self.bucket_name).Object(object_name).download_file(
+                '%s%s' % (self.storage_folder, object_name))
+        except:
+            return False
 
-        return 'The file has been downloaded.', 200
+        return True
 
     async def remove_object(self, object_name):
         """
         Delete an object on s3
         """
         try:
+            self.s3.Bucket(self.bucket_name).objects.all().delete()
             self.client.delete_bucket(Bucket=object_name)
         except:
             try:
