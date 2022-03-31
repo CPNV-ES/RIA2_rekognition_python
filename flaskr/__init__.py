@@ -35,7 +35,6 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-
     @app.route('/api/detect/face/<url>')
     def rekognition_face(url):
         return app.response_class(response=face_from_local_file(url),
@@ -58,7 +57,7 @@ def create_app(test_config=None):
     def handle_404(e):
         return 'This route doesn\'t exist :('
 
-    @app.route('/upload', methods=['POST'])
+    @app.route('/api/upload', methods=['POST'])
     async def upload():
         if 'file' not in request.files:
             return 'No file.', 400
@@ -84,14 +83,12 @@ def create_app(test_config=None):
 
         file = request.files['file']
 
-        file_exists = aws_bucket_manager.object_exists(
-            os.getenv('BUCKET_NAME'), file.filename)
+        file_exists = aws_bucket_manager.object_exists(file.filename)
 
         if (file_exists):
             saveResult = 'The file already exists.', 400
         else:
-            saveResult = await aws_bucket_manager.create_object(
-                os.getenv('BUCKET_NAME'), file)
+            saveResult = await aws_bucket_manager.create_object(file)
 
         print(saveResult)
 
@@ -109,13 +106,11 @@ def create_app(test_config=None):
         else:
             return app.response_class('Impossible to rekognise the face', 500)
 
-        return app.response_class('An error has occured', 500)
-
     @app.route('/api/display_image/request_analysis', methods=['POST'])
     async def RequestAnalysisShowImage():
         return await RequestAnalysis(True)
 
-    @app.route('/delete/<url>', methods=['DELETE'])
+    @app.route('/api/delete/<url>', methods=['DELETE'])
     async def remove(url):
         file_name = url
         if await aws_bucket_manager.remove_object(file_name):
@@ -123,7 +118,7 @@ def create_app(test_config=None):
         else:
             return 'File not found.', 404
 
-    @app.route('/download/<url>', methods=['GET'])
+    @app.route('/api/download/<url>', methods=['GET'])
     async def download(url):
         file_name = url
         if await aws_bucket_manager.download_object(file_name):
