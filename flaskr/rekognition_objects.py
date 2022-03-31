@@ -11,7 +11,7 @@ viewer.
 import io
 import logging
 from PIL import Image, ImageDraw
-
+import json
 logger = logging.getLogger(__name__)
 
 
@@ -74,14 +74,14 @@ class RekognitionFace:
             self.age_range = (age_range.get('Low'), age_range.get('High'))
         else:
             self.age_range = None
-        self.smile = face.get('Smile', {}).get('Value')
-        self.eyeglasses = face.get('Eyeglasses', {}).get('Value')
-        self.sunglasses = face.get('Sunglasses', {}).get('Value')
-        self.gender = face.get('Gender', {}).get('Value', None)
-        self.beard = face.get('Beard', {}).get('Value')
-        self.mustache = face.get('Mustache', {}).get('Value')
-        self.eyes_open = face.get('EyesOpen', {}).get('Value')
-        self.mouth_open = face.get('MouthOpen', {}).get('Value')
+        self.smile = face.get('Smile')
+        self.eyeglasses = face.get('Eyeglasses')
+        self.sunglasses = face.get('Sunglasses')
+        self.gender = face.get('Gender')
+        self.beard = face.get('Beard')
+        self.mustache = face.get('Mustache')
+        self.eyes_open = face.get('EyesOpen')
+        self.mouth_open = face.get('MouthOpen')
         self.emotions = [
             emo.get('Type') for emo in face.get('Emotions', [])
             if emo.get('Confidence', 0) > 50
@@ -91,6 +91,10 @@ class RekognitionFace:
         self.timestamp = timestamp
 
     def to_dict(self):
+        return json.dumps(self.__dict__)
+
+    def to_dict_args(self):
+
         """
         Renders some of the face data to a dict.
 
@@ -111,6 +115,34 @@ class RekognitionFace:
             rendering['image_id'] = self.image_id
         if self.timestamp is not None:
             rendering['timestamp'] = self.timestamp
+        
+        if self.smile is not None:
+            rendering['smile'] = self.smile
+
+        if self.eyeglasses is not None:
+            rendering['eyeglasses'] = self.eyeglasses
+        
+        if self.sunglasses is not None:
+            rendering['sunglasses'] = self.sunglasses
+        
+        if self.beard is not None:
+            rendering['beard'] = self.beard
+
+        if self.mustache is not None:
+            rendering['mustache'] = self.mustache
+        
+        if self.eyes_open is not None:
+            rendering['eyes_open'] = self.eyes_open
+
+        if self.mouth_open is not None:
+            rendering['mouth_open'] = self.mouth_open
+        
+        if self.pose is not None:
+            rendering['pose'] = self.pose
+        
+        if self.quality is not None:
+            rendering['quality'] = self.quality
+
         has = []
         if self.smile:
             has.append('smile')
