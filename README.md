@@ -7,24 +7,19 @@ First install the dependencies
 ```sh
 pip install -r requirements.txt
 ```
-## Configure the `.env` file
+## Setup environment variables
 
-The `.env` file is a file fill up with the secure configurations to link your project with AWS.
+1. Copy paste the file `.env_example` and rename it to `.env`
 
-1. Copy Past the file `.env_example` and rename it to `.env`
-
-2. Configure it
+2. Fill it with your settings
 
 ```js
-BUCKET_NAME=bucket
-BUCKET_URL=s3://${BUCKET_NAME}.${DOMAIN}
-BUCKET_FOLDER=default_storage
+BUCKET_NAME=bucket // Your aws bucket name
 AWS_ACCESS_KEY_ID=aws_access_key_id // Your aws access key id
 AWS_SECRET_ACCESS_KEY=aws_secret_access_key // Your aws secret access key
-AWS_DEFAULT_REGION=eu-central-1
-STORAGE_FOLDER=C:/ //The storage folder where images will be downloaded
+AWS_DEFAULT_REGION=eu-central-1 // Your aws default region
+STORAGE_FOLDER=C:/ // Storage folder where images will be downloaded
 ```
-
 
 ## Create a virtual python environnment
 
@@ -47,32 +42,22 @@ $Env:FLASK_APP="flaskr.py"
 $Env:FLASK_ENV="development"
 ```
 
-### Run
+## Run the app
 
 ```sh
-cd .\flaskr\
-
 flask run
 ```
 
-## Set environment variables
-
-```sh
-cp .env.exemple .env
-```
-
-Edit the file with your environment variables.
-
-## Via Script
-
-You also could start the following script to run the environment :
+or
 
 ```
 .\winStart.ps1
 ```
 
 ---
-# Testing
+## Testing
+
+Examples
 
 ```
 python -m unittest tests.test_bucket_manager
@@ -80,15 +65,15 @@ python -m unittest tests.test_bucket_manager.BucketManagerTestCase.test_create_o
 ```
 
 ---
-# Commands
+## Commands
 
-## Detect face
+### Detect face
 
 ```
 aws rekognition detect-faces ^ --image "{\"S3Object\":{\"Bucket\":\"ria2python.actualit.info\",\"Name\":\"cake.jpg\"}}"
 ```
 
-### Output
+#### Output
 
 ```
 {                                                                                     
