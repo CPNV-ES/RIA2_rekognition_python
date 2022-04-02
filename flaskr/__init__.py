@@ -1,14 +1,33 @@
+from enum import Enum
 import os
 import datetime
 import tempfile
 import json as js
 import pandas as pd
 import re
-
+from pypika import MySQLQuery as Query, Table, CustomFunction
 from flask import Flask, request, jsonify, json
 from werkzeug.utils import secure_filename
 from flaskr.aws_bucket_manager import AwsBucketManager
 from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
+
+
+class AttributeType(Enum):
+    STRING = 0
+    NUMBER = 1
+    BOOLEAN = 2
+    NONE = -1
+
+    @classmethod
+    def type(cls, value):
+        if (value is str):
+            return AttributeType.STRING
+        elif (value is float or value is int):
+            return AttributeType.NUMBER
+        elif (value is bool):
+            return AttributeType.BOOLEAN
+        else:
+            return AttributeType.NONE
 
 
 def create_app(test_config=None):
@@ -127,49 +146,85 @@ def create_app(test_config=None):
                 raise Exception(
                     r'No created_at given, try to add "created_at": "2018-12-25 09:27:53"')
 
-            # add single quote before and after str
-            def sq(str):
-                return repr(str)
+            image = Table('image')
+            analysis = Table('analysis')
+            object = Table('object')
+            attribute = Table('attribute')
 
-            sql_text += "INSERT INTO image VALUES (" + sq(content["bucket_url"]) + ", " + sq(
-                content["name"]) + ", " + sq(content["hash"]) + ");"
-            sql_text += "INSERT INTO analyse VALUES (LAST_INSERT_ID(), " + sq(
-                content["ip"]) + ", " + sq(content["created_at"]) + ");"
+            q = Query.into(image).columns('url', 'name', 'hash').insert(
+                content["bucket_url"], content["name"], content["hash"])
 
-            sql_text += "DECLARE @ANALYSE AS int = LAST_INSERT_ID();"
-            for items in content["analyse_content"]:
-                sql_text += "INSERT INTO object VALUES (@ANALYSE, 'face');"
+            sql_text = str(q) + ";"
 
-                attribute_sql = "INSERT INTO attribute VALUES "
+            sql_text += "SET @IMAGE = LAST_INSERT_ID();"
 
-                for key, value in items.items():
-                    attribute_sql += "(LAST_INSERT_ID(), " + \
-                        sq(key) + ", " + sq(json.dumps(value)) + "),"
+            ip_sql_function = CustomFunction('INET_ATON', ['ip'])
+            apocalypse_now_sql_function = CustomFunction('NOW')
 
-                sql_text += attribute_sql[:-2] + ";"
+            q = Query.into(analysis).columns('image_id', 'ip', 'created_at', 'updated_at').insert('@IMAGE',
+                                                                                                  ip_sql_function(content["ip"]), content["created_at"], apocalypse_now_sql_function())
+            # workaround to remove default quote wrapper to use @IMAGE variable
+            sql_text += str(q).replace("'@IMAGE'", "@IMAGE") + ";"
 
-            message = [sql_text]
+            sql_text += "SET @ANALYSIS = LAST_INSERT_ID();"
+
+            for analyzed_item in content["analysis_content"]:
+                q = Query.into(object).columns('analysis_id', 'name', 'category').insert(
+                    '@ANALYSIS', 'face_object', 'face')
+                sql_text += str(q).replace("'@ANALYSIS'", "@ANALYSIS") + ";"
+                sql_text += "SET @OBJECT = LAST_INSERT_ID();"
+
+                for object_key, object_value in analyzed_item.items():
+
+                    object_value_type = type(object_value)
+
+                    def get_attribute_insert_query(name, type: AttributeType, value):
+                        value_array = [None] * 3
+                        value_array[type.value] = str(
+                            value) if value is not None else None
+                        q = Query.into(attribute).columns('object_id', 'name', 'value_type', 'value_string', 'value_number', 'value_boolean').insert(
+                            '@OBJECT', name, type.name.lower(), value_array[0], value_array[1], value_array[2])
+                        return str(q).replace("'@OBJECT'", "@OBJECT") + ";"
+
+                    if (object_value_type is dict):
+                        for attribute_key, attribute_value in object_value.items():
+                            attribute_value_type = AttributeType.type(
+                                type(attribute_value))
+
+                            name = object_key + '.' + attribute_key
+                            sql_text += get_attribute_insert_query(
+                                name, attribute_value_type, attribute_value)
+                    elif object_value_type is list:
+                        for subobject_key in range(0, len(object_value)):
+                            if type(object_value[subobject_key]) is dict:
+                                for attribute_key, attribute_value in object_value[subobject_key].items():
+                                    attribute_value_type = AttributeType.type(
+                                        type(attribute_value))
+
+                                    name = object_key + '.' + \
+                                        str(subobject_key) + \
+                                        '.' + attribute_key
+                                    sql_text += get_attribute_insert_query(
+                                        name, attribute_value_type, attribute_value)
+                            else:
+                                attribute_value_type = AttributeType.type(
+                                    type(object_value[subobject_key]))
+
+                                name = object_key
+                                sql_text += get_attribute_insert_query(
+                                    name, attribute_value_type, object_value[subobject_key])
+                    else:
+
+                        attribute_value_type = AttributeType.type(
+                            object_value_type)
+                        name = object_key
+                        sql_text += get_attribute_insert_query(
+                            name, attribute_value_type, object_value)
+            message = sql_text
+
         except Exception as e:
             message = str(e)
 
-        return jsonify({"message": message})
-
-    def get_insert_query_from_df(df, dest_table):
-        insert = """
-        INSERT INTO `{dest_table}` (
-            """.format(dest_table=dest_table)
-
-        columns_string = str(list(df.columns))[1:-1]
-        columns_string = re.sub(r' ', '\n        ', columns_string)
-        columns_string = re.sub(r'\'', '', columns_string)
-
-        values_string = ''
-
-        for row in df.itertuples(index=False, name=None):
-            values_string += re.sub(r'nan', 'null', str(row))
-            values_string += ',\n'
-
-        return insert + columns_string + ')\n     VALUES\n' + values_string[:
-                                                                            -2] + ';'
+        return message
 
     return app
