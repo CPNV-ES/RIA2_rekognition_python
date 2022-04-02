@@ -17,7 +17,6 @@ from pprint import pprint
 import boto3
 from botocore.exceptions import ClientError
 from flask import request as requests
-
 from flaskr.rekognition_objects import RekognitionFace, RekognitionCelebrity, RekognitionLabel, RekognitionModerationLabel, RekognitionText, show_bounding_boxes, show_polygons
 
 logger = logging.getLogger(__name__)
@@ -85,8 +84,7 @@ class RekognitionImage:
         :return: The list of faces found in the image.
         """
         try:
-            response = self.rekognition_client.detect_faces(Image=self.image,
-                                                            Attributes=['ALL'])
+            response = self.rekognition_client.detect_faces(Image=self.image, Attributes=['ALL'])
             faces = [RekognitionFace(face) for face in response['FaceDetails']]
             logger.info("Detected %s faces.", len(faces))
         except ClientError:
@@ -214,73 +212,7 @@ class RekognitionImage:
             return celebrities, other_faces
 
 
-def usage_demo():
-    print('-' * 88)
-    print("Welcome to the Amazon Rekognition image detection demo!")
-    print('-' * 88)
-
-    logging.basicConfig(level=logging.INFO,
-                        format='%(levelname)s: %(message)s')
-    rekognition_client = boto3.client('rekognition')
-    celebrity_file_name = "flaskr/images/pexels-pixabay-53370.jpg"
-    one_girl_url = 'https://dhei5unw3vrsx.cloudfront.net/images/source3_resized.jpg'
-    three_girls_url = 'https://dhei5unw3vrsx.cloudfront.net/images/target3_resized.jpg'
-    swimwear_object = boto3.resource('s3').Object('console-sample-images-pdx',
-                                                  'yoga_swimwear.jpg')
-    book_file_name = 'flaskr/images/pexels-christina-morillo-1181671.jpg'
-
-    girl_image_response = requests.get(one_girl_url)
-    girl_image = RekognitionImage({'Bytes': girl_image_response.content},
-                                  "one-girl", rekognition_client)
-    group_image_response = requests.get(three_girls_url)
-    group_image = RekognitionImage({'Bytes': group_image_response.content},
-                                   "three-girls", rekognition_client)
-    print("Comparing reference face to group of faces...")
-    matches, unmatches = girl_image.compare_faces(group_image, 80)
-    print(f"Found {len(matches)} face matching the reference face.")
-    show_bounding_boxes(group_image.image['Bytes'],
-                        [[match.bounding_box for match in matches]], ['aqua'])
-    input("Press Enter to continue.")
-
-    swimwear_image = RekognitionImage.from_bucket(swimwear_object,
-                                                  rekognition_client)
-    print(f"Detecting suggestive content in {swimwear_object.key}...")
-    labels = swimwear_image.detect_moderation_labels()
-    print(f"Found {len(labels)} moderation labels.")
-    for label in labels:
-        pprint(label.to_dict())
-    input("Press Enter to continue.")
-
-    print(f"Detecting labels in {image.image_name}...")
-    labels = image.detect_labels(100)
-    print(f"Found {len(labels)} labels.")
-    for label in labels:
-        pprint(label.to_dict())
-    names = []
-    box_sets = []
-    colors = ['aqua', 'red', 'white', 'blue', 'yellow', 'green']
-    for label in labels:
-        if label.instances:
-            names.append(label.name)
-            box_sets.append([inst['BoundingBox'] for inst in label.instances])
-    print(f"Showing bounding boxes for {names} in {colors[:len(names)]}.")
-    show_bounding_boxes(image.image['Bytes'], box_sets, colors[:len(names)])
-    input("Press Enter to continue.")
-
-    book_image = RekognitionImage.from_file(book_file_name, rekognition_client)
-    print(f"Detecting text in {book_image.image_name}...")
-    texts = book_image.detect_text()
-    print(f"Found {len(texts)} text instances. Here are the first seven:")
-    for text in texts[:7]:
-        pprint(text.to_dict())
-    show_polygons(book_image.image['Bytes'],
-                  [text.geometry['Polygon'] for text in texts], 'aqua')
-
-    print("Thanks for watching!")
-    print('-' * 88)
-
-
-def face_from_url(url):
+def face_from_url(url, shoulDisplayImageBoundingBox):
     print('-' * 88)
     print("Face Rekognition Demo ")
     print('-' * 88)
@@ -293,25 +225,28 @@ def face_from_url(url):
     image = RekognitionImage({'Bytes': image_response.content}, "image",
                              rekognition_client)
 
-    print(f"Detecting faces in {url}...")
+    print(f"Detecting faces in {image.image_name}...")
     faces = image.detect_faces()
 
     print(f"Found {len(faces)} faces, here are the first three.")
     for face in faces[:3]:
-        pprint(face.to_dict())
+        faces_list.append(face)
 
-    show_bounding_boxes(image.image['Bytes'],
-                        [[face.bounding_box for face in faces]], ['aqua'])
-
+    if shoulDisplayImageBoundingBox :
+        show_bounding_boxes(
+            image.image['Bytes'], [
+                [face.bounding_box for face in faces]],
+            ['aqua'])
+    
     print("Thanks for watching!")
-    print('-' * 88)
+    print('-'*88)
+    
+    return json.dumps(faces_list)
 
 
-def face_from_local_file(url, shoulDisplayImageBoundingBox=False):
+def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
+
     faces_list = []
-    print('-' * 88)
-    print("Face Rekognition Demo ")
-    print('-' * 88)
 
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(message)s')
@@ -321,22 +256,39 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False):
 
     image = RekognitionImage.from_file(file_name, rekognition_client)
 
-    print(f"Detecting faces in {image.image_name}...")
-    faces = image.detect_faces()
-
-    print(f"Found {len(faces)} faces, here are the first three.")
-    for face in faces[:3]:
-        pprint(face.to_dict())
-        faces_list.append(face.to_dict())
-
+    faces = image.detect_faces()             
+        
+    # Display the image and bounding boxes of each face.
     if shoulDisplayImageBoundingBox:
         show_bounding_boxes(image.image['Bytes'],
                             [[face.bounding_box for face in faces]], ['aqua'])
 
-    print("Thanks for watching!")
-    print('-' * 88)
-    return json.dumps(faces_list)
+    # If arg is not None, then it is a list of arguments
+    # split the arg into list
+    if args is not None:
+        selectedAttributes = []
 
+        #arg_list = args.split(',')
+
+        for face in faces[:3]:
+            faces_list.append(face.to_dict_args())
+
+
+        #return json.dumps(faces_list)
+
+        # for each args
+        #for arg in arg_list:
+        for face in faces_list:
+            # get the interested attribute with the argument
+            selectedAttributes.append(face[args])
+
+        return json.dumps(selectedAttributes)
+
+    else:
+
+        for face in faces[:3]:
+            faces_list.append(face.to_dict())
+        return faces_list
 
 # This is a test
 def celebrity_demo():

@@ -54,23 +54,19 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    @app.route('/rekognition_face_demo')
-    def face_demo():
-        url = "pexels-kaique-rocha-109919.jpg"
-        shoulDisplayImageBoundingBox = True
-
-        return app.response_class(response=face_from_local_file(
-            url, shoulDisplayImageBoundingBox),
-            status=200,
-            mimetype='application/json')
-
-    @app.route('/rekognition_face/<url>')
+    @app.route('/api/detect/face/<url>')
     def rekognition_face(url):
         return app.response_class(response=face_from_local_file(url),
                                   status=200,
                                   mimetype='application/json')
+      
+    @app.route('/api/detect/face/<url>/<args>')
+    def rekognition_face_args(url, args):
+        return app.response_class(response=face_from_local_file(url, False, args),
+                                  status=200,
+                                  mimetype='application/json')
 
-    @app.route('/rekognition_face/display_image/<url>')
+    @app.route('/api/detect/face/display_image/<url>')
     def rekognition_face_show_image(url):
         return app.response_class(response=face_from_local_file(url, True),
                                   status=200,
@@ -87,38 +83,71 @@ def create_app(test_config=None):
 
         file = request.files['file']
 
+        await aws_bucket_manager.upload_file(file)
+
+        # ISSUE : Always return False but it's working
+        """ if await aws_bucket_manager.upload_file(file):
+            return 'File uploaded successfully.', 200
+        else:
+            return 'Upload failed.', 400 """
+
+        return 'File uploaded successfully.', 200
+
+        # TODO send link to face detector, facedetect(link, params)
+
+    @app.route('/api/request_analysis', methods=['POST'])
+    async def RequestAnalysis(shouldDisplayImage=False):
+        if 'file' not in request.files:
+            return 'No file.', 400
+
+        file = request.files['file']
+
         file_exists = aws_bucket_manager.object_exists(
             os.getenv('BUCKET_NAME'), file.filename)
 
         if (file_exists):
-            result = 'The file already exists.', 400
+            saveResult = 'The file already exists.', 400
         else:
-            result = await aws_bucket_manager.create_object(
+            saveResult = await aws_bucket_manager.create_object(
                 os.getenv('BUCKET_NAME'), file)
 
-        return result
+        print(saveResult)
+
+        # If the insert is a success
+        if saveResult == True:
+            downloadResult = await download(file.filename)
+        else:
+            return app.response_class('Impossible to download the file', 500)
+
+        # If the download is a success
+        if downloadResult == True:
+            return app.response_class(response=face_from_local_file(file.filename, shouldDisplayImage),
+                                      status=200,
+                                      mimetype='application/json')
+        else:
+            return app.response_class('Impossible to rekognise the face', 500)
+
+        return app.response_class('An error has occured', 500)
+
+    @app.route('/api/display_image/request_analysis', methods=['POST'])
+    async def RequestAnalysisShowImage():
+        return await RequestAnalysis(True)
 
     @app.route('/delete/<url>', methods=['DELETE'])
     async def remove(url):
-        try:
-            file_name = url
-            result = await aws_bucket_manager.remove_object(
-                os.getenv('BUCKET_NAME'), file_name)
-        except:
-            result = 'Empty filename argument', 400
-
-        return result
+        file_name = url
+        if await aws_bucket_manager.remove_object(file_name):
+            return 'File deleted successfully.', 200
+        else:
+            return 'File not found.', 404
 
     @app.route('/download/<url>', methods=['GET'])
     async def download(url):
-        try:
-            file_name = url
-            result = await aws_bucket_manager.download_object(
-                os.getenv('BUCKET_NAME'), file_name)
-        except:
-            result = 'An error occured.', 400
-
-        return result
+        file_name = url
+        if await aws_bucket_manager.download_object(file_name):
+            return 'File downloaded successfully.', 200
+        else:
+            return 'Impossible to download the file', 400
 
     @app.route('/api/generate/sql', methods=['POST'])
     async def generate_sql():
