@@ -1,14 +1,33 @@
+from enum import Enum
 import os
 import datetime
 import tempfile
 import json as js
 import pandas as pd
 import re
-
+from pypika import MySQLQuery as Query, Table, CustomFunction
 from flask import Flask, request, jsonify, json
 from werkzeug.utils import secure_filename
 from flaskr.aws_bucket_manager import AwsBucketManager
 from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
+
+
+class AttributeType(Enum):
+    STRING = 0
+    NUMBER = 1
+    BOOLEAN = 2
+    NONE = -1
+
+    @classmethod
+    def type(cls, value):
+        if (value is str):
+            return AttributeType.STRING
+        elif (value is float or value is int):
+            return AttributeType.NUMBER
+        elif (value is bool):
+            return AttributeType.BOOLEAN
+        else:
+            return AttributeType.NONE
 
 
 def create_app(test_config=None):
@@ -35,13 +54,12 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-
     @app.route('/api/detect/face/<url>')
     def rekognition_face(url):
         return app.response_class(response=face_from_local_file(url),
                                   status=200,
                                   mimetype='application/json')
-
+      
     @app.route('/api/detect/face/<url>/<args>')
     def rekognition_face_args(url, args):
         return app.response_class(response=face_from_local_file(url, False, args),
@@ -135,46 +153,107 @@ def create_app(test_config=None):
     async def generate_sql():
         content = request.get_json(silent=True)
 
+        message = ""
+
+        sql_text = ""
+
         try:
             if (not content):
-                raise Exception("No content")
-            df = pd.DataFrame(js.loads(js.dumps(content)))
-            sql_text = get_insert_query_from_df(df, 'rekognition_result')
+                raise Exception('No content')
+            if (not "bucket_url" in content or not content["bucket_url"]):
+                raise Exception(
+                    r'No bucket url given, try to add "bucket_url": "s3://kfc.kentuky.com/nugget.jpg" ')
+            if (not "name" in content or not content["name"]):
+                raise Exception(
+                    r'No name given, try to add "name": "example_1"')
+            if (not "hash" in content or not content["hash"]):
+                raise Exception(
+                    r'No hash given, try to add "hash": "5683b32d9da3fe83cef1e284dc210e768d02b7cf"')
+            if (not "ip" in content or not content["ip"]):
+                raise Exception(r'No ip given, try to add "ip": "8.8.8.8"')
+            if (not "created_at" in content or not content["created_at"]):
+                raise Exception(
+                    r'No created_at given, try to add "created_at": "2018-12-25 09:27:53"')
 
-            tmp = tempfile.NamedTemporaryFile(delete=False)
+            image = Table('image')
+            analysis = Table('analysis')
+            object = Table('object')
+            attribute = Table('attribute')
 
-            tmp.write(bytes(sql_text, 'utf-8'))
-            generate_sql_filename = datetime.datetime.now().strftime(
-                "%Y-%m-%d_%H-%M-%S-%f") + "_MAAAAA.sql"
-            object_url = '%s/sql/%s' % (os.getenv("BUCKET_URL"),
-                                        generate_sql_filename)
-            if (os.path.exists(tmp.name)):
-                bucket = AwsBucketManager()
-                await bucket.create_object(object_url, tmp.name)
+            q = Query.into(image).columns('url', 'name', 'hash').insert(
+                content["bucket_url"], content["name"], content["hash"])
 
-            tmp.close()
-            message = object_url
+            sql_text = str(q) + ";"
+
+            sql_text += "SET @IMAGE = LAST_INSERT_ID();"
+
+            ip_sql_function = CustomFunction('INET_ATON', ['ip'])
+            apocalypse_now_sql_function = CustomFunction('NOW')
+
+            q = Query.into(analysis).columns('image_id', 'ip', 'created_at', 'updated_at').insert('@IMAGE',
+                                                                                                  ip_sql_function(content["ip"]), content["created_at"], apocalypse_now_sql_function())
+            # workaround to remove default quote wrapper to use @IMAGE variable
+            sql_text += str(q).replace("'@IMAGE'", "@IMAGE") + ";"
+
+            sql_text += "SET @ANALYSIS = LAST_INSERT_ID();"
+
+            for analyzed_item in content["analysis_content"]:
+                q = Query.into(object).columns('analysis_id', 'name', 'category').insert(
+                    '@ANALYSIS', 'face_object', 'face')
+                sql_text += str(q).replace("'@ANALYSIS'", "@ANALYSIS") + ";"
+                sql_text += "SET @OBJECT = LAST_INSERT_ID();"
+
+                for object_key, object_value in analyzed_item.items():
+
+                    object_value_type = type(object_value)
+
+                    def get_attribute_insert_query(name, type: AttributeType, value):
+                        value_array = [None] * 3
+                        value_array[type.value] = str(
+                            value) if value is not None else None
+                        q = Query.into(attribute).columns('object_id', 'name', 'value_type', 'value_string', 'value_number', 'value_boolean').insert(
+                            '@OBJECT', name, type.name.lower(), value_array[0], value_array[1], value_array[2])
+                        return str(q).replace("'@OBJECT'", "@OBJECT") + ";"
+
+                    if (object_value_type is dict):
+                        for attribute_key, attribute_value in object_value.items():
+                            attribute_value_type = AttributeType.type(
+                                type(attribute_value))
+
+                            name = object_key + '.' + attribute_key
+                            sql_text += get_attribute_insert_query(
+                                name, attribute_value_type, attribute_value)
+                    elif object_value_type is list:
+                        for subobject_key in range(0, len(object_value)):
+                            if type(object_value[subobject_key]) is dict:
+                                for attribute_key, attribute_value in object_value[subobject_key].items():
+                                    attribute_value_type = AttributeType.type(
+                                        type(attribute_value))
+
+                                    name = object_key + '.' + \
+                                        str(subobject_key) + \
+                                        '.' + attribute_key
+                                    sql_text += get_attribute_insert_query(
+                                        name, attribute_value_type, attribute_value)
+                            else:
+                                attribute_value_type = AttributeType.type(
+                                    type(object_value[subobject_key]))
+
+                                name = object_key
+                                sql_text += get_attribute_insert_query(
+                                    name, attribute_value_type, object_value[subobject_key])
+                    else:
+
+                        attribute_value_type = AttributeType.type(
+                            object_value_type)
+                        name = object_key
+                        sql_text += get_attribute_insert_query(
+                            name, attribute_value_type, object_value)
+            message = sql_text
+
         except Exception as e:
             message = str(e)
 
-        return jsonify({"message": message})
-
-    def get_insert_query_from_df(df, dest_table):
-        insert = """
-        INSERT INTO `{dest_table}` (
-            """.format(dest_table=dest_table)
-
-        columns_string = str(list(df.columns))[1:-1]
-        columns_string = re.sub(r' ', '\n        ', columns_string)
-        columns_string = re.sub(r'\'', '', columns_string)
-
-        values_string = ''
-
-        for row in df.itertuples(index=False, name=None):
-            values_string += re.sub(r'nan', 'null', str(row))
-            values_string += ',\n'
-
-        return insert + columns_string + ')\n     VALUES\n' + values_string[:
-                                                                            -2] + ';'
+        return message
 
     return app
