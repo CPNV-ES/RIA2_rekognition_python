@@ -12,7 +12,6 @@ class AwsBucketManager:
 
     def __init__(self) -> None:
         self.s3 = boto3.client('s3')
-        self.bucket_name = os.getenv('BUCKET_NAME')
         self.storage_folder = os.getenv('STORAGE_FOLDER')
         self.s3_default_region = os.getenv('AWS_DEFAULT_REGION')
 
@@ -30,92 +29,123 @@ class AwsBucketManager:
 
         return result
 
-    async def create_object(self, object_name):
+    async def create_object(self, bucket_name=None, object_file_path=None):
         """
         Create a bucket or an object on s3
-        object_name => bucket_name or file_path
-        """
+        """     
         s3_bucket_exists_waiter = self.s3.get_waiter('bucket_exists')
         s3_object_exists_waiter = self.s3.get_waiter('object_exists')
 
-        try:
-            self.s3.create_bucket(Bucket=object_name, CreateBucketConfiguration={
-                                  'LocationConstraint': self.s3_default_region})
-            # Retrieve waiter instance that will wait till a specified S3 bucket exists
-            s3_bucket_exists_waiter.wait(Bucket=object_name, WaiterConfig={
-                                         'Delay': 2, 'MaxAttempts': 10})
-        except:
-            if await self.object_exists(self.bucket_name):
+        if bucket_name and not object_file_path:
+            if await self.object_exists(bucket_name=bucket_name):
+                object_url = "http://s3-%s.amazonaws.com/%s/" % (self.s3_default_region, bucket_name)
+
+                return object_url
+            else:
                 try:
-                    file_name = object_name.split("/")[-1]
-                    self.s3.put_object(Bucket=self.bucket_name,
-                                       Key=file_name, Body=object_name)
+                    self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
+                                        'LocationConstraint': self.s3_default_region})
+                    # Retrieve waiter instance that will wait till a specified S3 bucket exists
+                    s3_bucket_exists_waiter.wait(Bucket=bucket_name, WaiterConfig={
+                                                'Delay': 2, 'MaxAttempts': 10})
+                except:
+                    return False
+
+        if bucket_name and object_file_path:
+            file_name = object_file_path.split("\\")[-1]
+
+            if await self.object_exists(bucket_name=bucket_name):
+                try:
+                    self.s3.put_object(Bucket=bucket_name,
+                                       Key=file_name, Body=object_file_path)
 
                     # Retrieve waiter instance that will wait till a specified S3 object exists
                     s3_object_exists_waiter.wait(
-                        Bucket=self.bucket_name, Key=object_name, WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
+                        Bucket=bucket_name, Key=object_file_path, WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
+
+                    object_url = "http://s3-%s.amazonaws.com/%s/%s" % (self.s3_default_region, bucket_name, file_name)
+
+                    return object_url
                 except:
                     return False
             else:
                 try:
-                    self.s3.create_bucket(Bucket=self.bucket_name, CreateBucketConfiguration={
-                                          'LocationConstraint': self.s3_default_region})
+                    self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
+                                        'LocationConstraint': self.s3_default_region})
                     # Retrieve waiter instance that will wait till a specified S3 bucket exists
-                    s3_bucket_exists_waiter.wait(Bucket=self.bucket_name, WaiterConfig={
-                                                 'Delay': 2, 'MaxAttempts': 10})
+                    s3_bucket_exists_waiter.wait(Bucket=bucket_name, WaiterConfig={
+                                                'Delay': 2, 'MaxAttempts': 10})
 
-                    file_name = object_name.split("/")[-1]
-                    self.s3.put_object(Bucket=self.bucket_name,
-                                       Key=file_name, Body=object_name)
+                    self.s3.put_object(Bucket=bucket_name,
+                                       Key=file_name, Body=object_file_path)
 
                     # Retrieve waiter instance that will wait till a specified S3 object exists
                     s3_object_exists_waiter.wait(
-                        Bucket=self.bucket_name, Key=object_name, WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
+                        Bucket=bucket_name, Key=object_file_path, WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
+
+                    object_url = "http://s3-%s.amazonaws.com/%s/%s" % (self.s3_default_region, bucket_name, file_name)
+
+                    return object_url
                 except:
                     return False
+        
+        return False
 
-        return True
-
-    async def object_exists(self, object_name):
+    async def object_exists(self, bucket_name=None, object_name=None):
         """
         Check if the bucket or the object exists on s3
         """
-        try:
-            self.s3.head_bucket(Bucket=object_name)
-        except:
+        if bucket_name and not object_name:
             try:
-                self.s3.head_object(Bucket=self.bucket_name, Key=object_name)
+                self.s3.head_bucket(Bucket=bucket_name)
+
+                return True
             except:
                 return False
 
-        return True
+        if bucket_name and object_name:
+            try:
+                self.s3.head_object(Bucket=bucket_name, Key=object_name)
 
-    async def download_object(self, object_name):
+                return True
+            except:
+                return False
+        
+        return False
+
+    async def download_object(self, bucket_name, object_name):
         """
         Download an object from s3
         """
         try:
-            self.s3.download_file(self.bucket_name, object_name, '%s%s' % (
+            self.s3.download_file(bucket_name, object_name, '%s%s' % (
                 self.storage_folder, object_name))
         except:
             return False
 
         return True
 
-    async def remove_object(self, object_name):
+    async def remove_object(self, bucket_name=None, object_name=None):
         """
         Delete a bucket or an object on s3
         """
         s3_resource = boto3.resource('s3')
 
-        try:
-            s3_resource.Bucket(self.bucket_name).objects.all().delete()
-            self.s3.delete_bucket(Bucket=object_name)
-        except:
+        if bucket_name and not object_name:
             try:
-                s3_resource.Bucket(self.bucket_name).Object(
-                    object_name).delete()
+                s3_resource.Bucket(bucket_name).objects.all().delete()
+                self.s3.delete_bucket(Bucket=bucket_name)
+
+                return True
             except:
                 return False
+        
+        if bucket_name and object_name:
+            try:
+                s3_resource.Object(bucket_name, object_name).delete()
 
-        return True
+                return True
+            except:
+                return False
+        
+        return False
