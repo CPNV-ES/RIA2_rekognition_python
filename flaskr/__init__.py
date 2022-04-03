@@ -12,6 +12,8 @@ from flaskr.rekognition_image_detection import face_from_url, face_from_local_fi
 
 
 def create_app(test_config=None):
+    aws_bucket_manager = AwsBucketManager()
+    bucket_name = 'ria2.diduno.education'
 
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -19,8 +21,6 @@ def create_app(test_config=None):
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
-
-    aws_bucket_manager = AwsBucketManager()
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -34,6 +34,31 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
+
+    @app.route('/api/upload', methods=['POST'])
+    async def upload():
+        if 'file' not in request.files:
+            return 'No file.', 400
+
+        file = request.files['file']
+
+        return await aws_bucket_manager.upload_file(bucket_name, file)
+
+    @app.route('/api/delete/<url>', methods=['DELETE'])
+    async def remove(url):
+        file_name = url
+        if await aws_bucket_manager.remove_object(bucket_name=bucket_name, object_name=file_name):
+            return 'File deleted successfully.', 200
+        else:
+            return 'File not found.', 404
+
+    @app.route('/api/download/<url>', methods=['GET'])
+    async def download(url):
+        file_name = url
+        if await aws_bucket_manager.download_object(bucket_name, file_name):
+            return 'File downloaded successfully.', 200
+        else:
+            return 'Impossible to download the file', 400
 
     @app.route('/api/detect/face/<url>')
     def rekognition_face(url):
@@ -52,19 +77,6 @@ def create_app(test_config=None):
         return app.response_class(response=face_from_local_file(url, True),
                                   status=200,
                                   mimetype='application/json')
-
-    @app.errorhandler(404)
-    def handle_404(e):
-        return 'This route doesn\'t exist :('
-
-    @app.route('/api/upload', methods=['POST'])
-    async def upload():
-        if 'file' not in request.files:
-            return 'No file.', 400
-
-        file = request.files['file']
-
-        return await aws_bucket_manager.upload_file('ria2.diduno.education', file)
 
     @app.route('/api/request_analysis', methods=['POST'])
     async def RequestAnalysis(shouldDisplayImage=False):
@@ -99,22 +111,6 @@ def create_app(test_config=None):
     @app.route('/api/display_image/request_analysis', methods=['POST'])
     async def RequestAnalysisShowImage():
         return await RequestAnalysis(True)
-
-    @app.route('/api/delete/<url>', methods=['DELETE'])
-    async def remove(url):
-        file_name = url
-        if await aws_bucket_manager.remove_object(file_name):
-            return 'File deleted successfully.', 200
-        else:
-            return 'File not found.', 404
-
-    @app.route('/api/download/<url>', methods=['GET'])
-    async def download(url):
-        file_name = url
-        if await aws_bucket_manager.download_object(file_name):
-            return 'File downloaded successfully.', 200
-        else:
-            return 'Impossible to download the file', 400
 
     @app.route('/api/generate/sql', methods=['POST'])
     async def generate_sql():
@@ -161,5 +157,9 @@ def create_app(test_config=None):
 
         return insert + columns_string + ')\n     VALUES\n' + values_string[:
                                                                             -2] + ';'
+
+    @app.errorhandler(404)
+    def handle_404(e):
+        return 'This route doesn\'t exist :('
 
     return app
