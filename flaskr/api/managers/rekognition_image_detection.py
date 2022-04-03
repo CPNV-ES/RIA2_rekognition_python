@@ -17,7 +17,7 @@ from pprint import pprint
 import boto3
 from botocore.exceptions import ClientError
 from flask import request as requests
-from flaskr.rekognition_objects import RekognitionFace, RekognitionCelebrity, RekognitionLabel, RekognitionModerationLabel, RekognitionText, show_bounding_boxes, show_polygons
+from flaskr.api.managers.rekognition_objects import RekognitionFace, RekognitionCelebrity, RekognitionLabel, RekognitionModerationLabel, RekognitionText, show_bounding_boxes, show_polygons
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,8 @@ class RekognitionImage:
         :return: The list of faces found in the image.
         """
         try:
-            response = self.rekognition_client.detect_faces(Image=self.image, Attributes=['ALL'])
+            response = self.rekognition_client.detect_faces(
+                Image=self.image, Attributes=['ALL'])
             faces = [RekognitionFace(face) for face in response['FaceDetails']]
             logger.info("Detected %s faces.", len(faces))
         except ClientError:
@@ -232,15 +233,15 @@ def face_from_url(url, shoulDisplayImageBoundingBox):
     for face in faces[:3]:
         faces_list.append(face)
 
-    if shoulDisplayImageBoundingBox :
+    if shoulDisplayImageBoundingBox:
         show_bounding_boxes(
             image.image['Bytes'], [
                 [face.bounding_box for face in faces]],
             ['aqua'])
-    
+
     print("Thanks for watching!")
     print('-'*88)
-    
+
     return json.dumps(faces_list)
 
 
@@ -256,8 +257,8 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
 
     image = RekognitionImage.from_file(file_name, rekognition_client)
 
-    faces = image.detect_faces()             
-        
+    faces = image.detect_faces()
+
     # Display the image and bounding boxes of each face.
     if shoulDisplayImageBoundingBox:
         show_bounding_boxes(image.image['Bytes'],
@@ -273,24 +274,26 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
         for face in faces[:3]:
             faces_list.append(face.to_dict_args())
 
-
-        #return json.dumps(faces_list)
+        # return json.dumps(faces_list)
 
         # for each args
-        #for arg in arg_list:
+        # for arg in arg_list:
         for face in faces_list:
             # get the interested attribute with the argument
             selectedAttributes.append(face[args])
 
-        return json.dumps(selectedAttributes)
+        return json.loads(selectedAttributes)
 
     else:
 
         for face in faces[:3]:
             faces_list.append(face.to_dict())
+
         return faces_list
 
 # This is a test
+
+
 def celebrity_demo():
 
     print('-' * 88)
