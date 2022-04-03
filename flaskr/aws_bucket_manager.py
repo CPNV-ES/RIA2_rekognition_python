@@ -15,7 +15,7 @@ class AwsBucketManager:
         self.storage_folder = os.getenv('STORAGE_FOLDER')
         self.s3_default_region = os.getenv('AWS_DEFAULT_REGION')
 
-    async def upload_file(self, file):
+    async def upload_file(self, bucket_name, file):
         """
         Create an object on s3 using a multipart upload
         """
@@ -23,19 +23,14 @@ class AwsBucketManager:
         file.save(os.path.join(self.storage_folder, filename))
         file_path = '%s%s' % (self.storage_folder, filename)
 
-        result = await self.create_object(file_path)
+        result = await self.create_object(bucket_name=bucket_name, object_file_path=file_path)
 
-        os.remove('%s%s' % (self.storage_folder, filename))
-
-        return result
+        return result, 200
 
     async def create_object(self, bucket_name=None, object_file_path=None):
         """
         Create a bucket or an object on s3
-        """     
-        s3_bucket_exists_waiter = self.s3.get_waiter('bucket_exists')
-        s3_object_exists_waiter = self.s3.get_waiter('object_exists')
-
+        """
         if bucket_name and not object_file_path:
             if await self.object_exists(bucket_name=bucket_name):
                 object_url = "http://s3-%s.amazonaws.com/%s/" % (self.s3_default_region, bucket_name)
@@ -45,9 +40,6 @@ class AwsBucketManager:
                 try:
                     self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
                                         'LocationConstraint': self.s3_default_region})
-                    # Retrieve waiter instance that will wait till a specified S3 bucket exists
-                    s3_bucket_exists_waiter.wait(Bucket=bucket_name, WaiterConfig={
-                                                'Delay': 2, 'MaxAttempts': 10})
                 except:
                     return False
 
@@ -59,10 +51,6 @@ class AwsBucketManager:
                     self.s3.put_object(Bucket=bucket_name,
                                        Key=file_name, Body=object_file_path)
 
-                    # Retrieve waiter instance that will wait till a specified S3 object exists
-                    s3_object_exists_waiter.wait(
-                        Bucket=bucket_name, Key=object_file_path, WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
-
                     object_url = "http://s3-%s.amazonaws.com/%s/%s" % (self.s3_default_region, bucket_name, file_name)
 
                     return object_url
@@ -72,16 +60,9 @@ class AwsBucketManager:
                 try:
                     self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
                                         'LocationConstraint': self.s3_default_region})
-                    # Retrieve waiter instance that will wait till a specified S3 bucket exists
-                    s3_bucket_exists_waiter.wait(Bucket=bucket_name, WaiterConfig={
-                                                'Delay': 2, 'MaxAttempts': 10})
 
                     self.s3.put_object(Bucket=bucket_name,
                                        Key=file_name, Body=object_file_path)
-
-                    # Retrieve waiter instance that will wait till a specified S3 object exists
-                    s3_object_exists_waiter.wait(
-                        Bucket=bucket_name, Key=object_file_path, WaiterConfig={'Delay': 2, 'MaxAttempts': 10})
 
                     object_url = "http://s3-%s.amazonaws.com/%s/%s" % (self.s3_default_region, bucket_name, file_name)
 

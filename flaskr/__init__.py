@@ -64,17 +64,7 @@ def create_app(test_config=None):
 
         file = request.files['file']
 
-        await aws_bucket_manager.upload_file(file)
-
-        # ISSUE : Always return False but it's working
-        """ if await aws_bucket_manager.upload_file(file):
-            return 'File uploaded successfully.', 200
-        else:
-            return 'Upload failed.', 400 """
-
-        return 'File uploaded successfully.', 200
-
-        # TODO send link to face detector, facedetect(link, params)
+        return await aws_bucket_manager.upload_file('ria2.diduno.education', file)
 
     @app.route('/api/request_analysis', methods=['POST'])
     async def RequestAnalysis(shouldDisplayImage=False):
