@@ -1,6 +1,7 @@
 from flask import Flask
 from flasgger import Swagger
 from flaskr.api.routes.generation import generate_api
+from flaskr.api.routes.detection import detection_api
 
 
 def create_app():
@@ -15,6 +16,8 @@ def create_app():
     base_api_url = '/api/v1'
 
     app.register_blueprint(generate_api, url_prefix=base_api_url + '/generate')
+
+    app.register_blueprint(detection_api, url_prefix=base_api_url + '/detect')
 
     return app
 
