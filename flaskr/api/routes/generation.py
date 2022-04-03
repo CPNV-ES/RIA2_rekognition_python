@@ -1,14 +1,70 @@
 from http import HTTPStatus
-from flask import Blueprint, request
+from flask import Blueprint, jsonify, request
 from flasgger import swag_from
 from pypika import MySQLQuery as Query, Table, CustomFunction
 from flaskr.constants.AttributeType import AttributeType
 
-generate_api = Blueprint('api', __name__)
+generate_api = Blueprint('generation', __name__)
 
 
 @generate_api.route('/sql', methods=['POST'])
-async def generate_sql():
+@swag_from({
+    'responses': {
+        HTTPStatus.OK.value: {
+            'description': 'Generated SQL query to insert data into database',
+            'content': {
+                'application/sql': {
+                    'schema': {
+                        'type': 'string',
+                        'format': 'sql'
+                    }
+                },
+                HTTPStatus.INTERNAL_SERVER_ERROR.value: {
+                    'description': 'Internal server error',
+                    'schema': {
+                        'type': 'object',
+                        'properties': {
+                            'error': {
+                                'type': 'string'
+                            }
+                        },
+                    }
+                }
+            }
+        }
+    }
+})
+def generate_sql():
+    """
+    Let the user generate a SQL query from a JSON request
+    ---
+    parameters:
+    - name: bucket_url
+      in: path
+      type: string
+      required: true
+      description: The url of the bucket where the images are stored
+    - name: name
+      in: path
+      type: string
+      required: true
+      description: The name of the image
+    - name: hash
+      in: path
+      type: string
+      required: true
+      description: The hash of the image
+    - name: ip
+      in: path
+      type: string
+      required: true
+      description: The ip of source request user
+    - name: created_at
+      in: path
+      type: string
+      required: true
+      description: The date of the image analysis
+    """
     content = request.get_json(silent=True)
 
     message = ""
@@ -107,9 +163,10 @@ async def generate_sql():
                     name = object_key
                     sql_text += get_attribute_insert_query(
                         name, attribute_value_type, object_value)
-        message = sql_text
+        response = sql_text,
 
     except Exception as e:
-        message = str(e)
+        response = jsonify({'error': str(e)},
+                           status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    return message
+    return response
