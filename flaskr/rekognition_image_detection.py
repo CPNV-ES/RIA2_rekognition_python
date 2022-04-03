@@ -16,7 +16,8 @@ import logging
 from pprint import pprint
 import boto3
 from botocore.exceptions import ClientError
-from flask import request as requests
+#from flask import request as requests
+import requests
 from flaskr.rekognition_objects import RekognitionFace, RekognitionCelebrity, RekognitionLabel, RekognitionModerationLabel, RekognitionText, show_bounding_boxes, show_polygons
 
 logger = logging.getLogger(__name__)
@@ -222,6 +223,7 @@ def face_from_url(url, shoulDisplayImageBoundingBox):
     rekognition_client = boto3.client('rekognition')
 
     image_response = requests.get(url)
+    print(image_response.content)
     image = RekognitionImage({'Bytes': image_response.content}, "image",
                              rekognition_client)
 
