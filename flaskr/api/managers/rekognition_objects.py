@@ -103,8 +103,6 @@ class RekognitionFace:
         rendering = {}
         if self.bounding_box is not None:
             rendering['bounding_box'] = self.bounding_box
-        if self.age_range is not None:
-            rendering['age'] = f'{self.age_range[0]} - {self.age_range[1]}'
         if self.gender is not None:
             rendering['gender'] = self.gender
         if self.emotions:
@@ -116,6 +114,12 @@ class RekognitionFace:
         if self.timestamp is not None:
             rendering['timestamp'] = self.timestamp
         
+        if self.confidence is not None:
+            rendering['confidence'] = self.confidence
+
+        if self.age_range is not None:
+            rendering['age_range'] = self.age_range
+
         if self.smile is not None:
             rendering['smile'] = self.smile
 

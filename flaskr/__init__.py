@@ -80,6 +80,8 @@ def create_app(test_config=None):
         if 'file' not in request.files:
             return 'No file.', 400
 
+        arguments = request.values.get('arguments')
+
         file = request.files['file']
 
         file_exists = await i_aws_bucket_manager.upload_file(bucket, file)
@@ -88,9 +90,9 @@ def create_app(test_config=None):
 
         downloadResult = await download(bucket, file)
 
-        return app.response_class(response=face_from_local_file(file.filename, shouldDisplayImage),
-                                      status=200,
-                                      mimetype='application/json')
+        return app.response_class(response=face_from_local_file(file.filename, shouldDisplayImage, arguments),
+                                    status=200,
+                                    mimetype='application/json')
 
 
     @app.route('/api/<bucket>/request_analysis/display_image', methods=['POST'])
