@@ -13,7 +13,6 @@ from flaskr.rekognition_image_detection import face_from_url, face_from_local_fi
 
 def create_app(test_config=None):
     aws_bucket_manager = AwsBucketManager()
-    bucket_name = 'ria2.diduno.education'
 
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -35,30 +34,22 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    @app.route('/api/upload', methods=['POST'])
-    async def upload():
+    @app.route('/api/upload/<bucket>', methods=['POST'])
+    async def upload(bucket):
         if 'file' not in request.files:
             return 'No file.', 400
 
         file = request.files['file']
 
-        return await aws_bucket_manager.upload_file(bucket_name, file)
+        return await aws_bucket_manager.upload_file(bucket, file)
 
-    @app.route('/api/delete/<url>', methods=['DELETE'])
-    async def remove(url):
-        file_name = url
-        if await aws_bucket_manager.remove_object(bucket_name=bucket_name, object_name=file_name):
-            return 'File deleted successfully.', 200
-        else:
-            return 'File not found.', 404
+    @app.route('/api/delete/<bucket>/<object>', methods=['DELETE'])
+    async def remove(bucket, object):
+        return await aws_bucket_manager.remove_object(bucket_name=bucket, object_name=object)
 
-    @app.route('/api/download/<url>', methods=['GET'])
-    async def download(url):
-        file_name = url
-        if await aws_bucket_manager.download_object(bucket_name, file_name):
-            return 'File downloaded successfully.', 200
-        else:
-            return 'Impossible to download the file', 400
+    @app.route('/api/download/<bucket>/<object>', methods=['GET'])
+    async def download(bucket, object):
+        return await aws_bucket_manager.download_object(bucket, object)
 
     @app.route('/api/detect/face/<url>')
     def rekognition_face(url):
@@ -160,6 +151,6 @@ def create_app(test_config=None):
 
     @app.errorhandler(404)
     def handle_404(e):
-        return 'This route doesn\'t exist :('
+        return 'Not found', 404
 
     return app
