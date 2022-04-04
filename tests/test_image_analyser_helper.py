@@ -1,5 +1,4 @@
 from re import S
-from flaskr import aws_bucket_manager
 from flaskr.rekognition_image_detection import face_from_local_file, face_from_url
 from flaskr.aws_bucket_manager import AwsBucketManager
 import unittest
@@ -24,11 +23,11 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
         #os.remove(self.local_image_path)
         shutil.copyfile(self.local_image_name, self.image_copy_path)
 
-        # Upload picture        
-        aws_bucket_manager = AwsBucketManager()
-        aws_bucket_manager.upload_file(self.image_copy_path)
+        # Upload picture
+        self.aws_bucket_manager = AwsBucketManager()
 
         self.image_url = "%s%s" % (os.getenv('BUCKET_URL'), self.local_image_name)
+        self.image_url = "https://s3.eu-central-1.amazonaws.com/ria2.diduno.education/duck.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA2KFJKL4O5BC6BG62%2F20220404%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220404T075501Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=c2d6027d8f9220aa63d87ad6a5c2f32833176da527cf0b43daca9a389cc17231"
 
         # Prepare expected json
         # Here instead of using an outdated json we get it fresh so we make sure there's no difference
@@ -58,6 +57,8 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
     when we try to analyze a data object presents on a bucket
     """
     async def test_analyse_dataobject_succes(self):
+        
+        await self.aws_bucket_manager.create_object(self.image_copy_path)
         actual_json = face_from_url(self.image_url, False)
 
         self.assertEqual(self.expected_json, actual_json)
@@ -67,6 +68,7 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
     when we try to analyze a data object presents on a bucket
     """
     async def test_to_json_dataobject_succes(self):
+        await self.aws_bucket_manager.create_object(self.image_copy_path)
         actual_json = face_from_url(self.image_url, False)
 
         self.assertEqual(self.expected_json, actual_json)
