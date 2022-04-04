@@ -35,41 +35,28 @@ class AwsBucketManager:
             if await self.object_exists(bucket_name=bucket_name):
                 return "Bucket already exists", 400
             else:
-                try:
-                    self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
-                                        'LocationConstraint': self.s3_default_region})
-                except:
+                if await self._create_bucket(bucket_name):
+                    return "Bucket created", 200
+                else:
                     return "Error while creating the bucket", 500
 
         if bucket_name and object_file_path:
-            file_name = object_file_path.split("\\")[-1]
-
             if await self.object_exists(bucket_name=bucket_name):
-                try:
-                    self.s3.upload_file(object_file_path, bucket_name, file_name)
-
-                    presigned_url = self.s3.generate_presigned_url('get_object', Params={
-                        'Bucket': bucket_name,
-                        'Key': file_name
-                    }, ExpiresIn=3600)
-
-                    return presigned_url, 200
-                except:
-                    return "Error while uploading the file", 500
+                result = await self._upload_file(bucket_name=bucket_name, file_path=object_file_path)
+                
+                if result:
+                    return result, 200
+                else:
+                    return "Error while uploading the object", 500
             else:
-                try:
-                    self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
-                                        'LocationConstraint': self.s3_default_region})
-
-                    self.s3.upload_file(object_file_path, bucket_name, file_name)
-
-                    presigned_url = self.s3.generate_presigned_url('get_object', Params={
-                        'Bucket': bucket_name,
-                        'Key': file_name
-                    }, ExpiresIn=3600)
-
-                    return presigned_url, 200
-                except:
+                if await self._create_bucket(bucket_name):
+                    result = await self._upload_file(bucket_name=bucket_name, file_path=object_file_path)
+                    
+                    if result:
+                        return result, 200
+                    else:
+                        return "Error while uploading the object", 500
+                else:
                     return "Error while creating the bucket and uploading the file", 500
         
         return "Error while creating the object", 500
@@ -132,3 +119,42 @@ class AwsBucketManager:
                 return "Error while deleting the object", 500
         
         return "Error while deleting the object", 500
+
+    async def _create_bucket(self, bucket_name):
+        """
+        Create a bucket on s3
+        """
+        try:
+            self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
+                                        'LocationConstraint': self.s3_default_region})
+            return True
+        except:
+            return False
+    
+    async def _upload_file(self, bucket_name, file_path):
+        """
+        Create an object on s3 using a multipart upload
+        """
+        try:
+            file_name = os.path.basename(file_path)
+            self.s3.upload_file(file_path, bucket_name, file_name)
+
+            presigned_url = await self._get_presigned_url(bucket_name, file_name)
+            
+            return presigned_url
+        except:
+            return False
+
+    async def _get_presigned_url(self, bucket_name, object_name):
+        """
+        Get a presigned url to access an object on s3
+        """
+        try:
+            presigned_url = self.s3.generate_presigned_url('get_object', Params={
+                'Bucket': bucket_name,
+                'Key': object_name
+            }, ExpiresIn=3600)
+
+            return presigned_url
+        except:
+            return False
