@@ -13,7 +13,7 @@ Parameters :
 
 The ``<bucket>`` AWS to use to upload the image.
 
-Any doubt ? Execute the commande bellow to show available buckets :
+Any doubt ? Execute the command bellow to show available buckets :
 ```
 aws s3 ls
 ```
@@ -22,7 +22,7 @@ Parameters [on post] :
 | Name | Type | Description |
 | -------- | -------- | -------- |
 | file     | File     | Image to rekognize     |
-| arguments     | String     | Option, Return only the specify arguments. To write multiple arguments write them as : `arg1,arg2,arg3`|
+| arguments     | String     | Optional, Returns only the specify arguments. To write multiple arguments write them as : `arg1,arg2,arg3`|
 
 >Example of arguments to use
 > `has` (Facial Characteristic), `age_range` (Age range of the person)
@@ -30,7 +30,7 @@ Parameters [on post] :
 >Example :
 >http://127.0.0.1:5000/api/ria2.test.education/request_analysis
 
-Our application could also display the image with bouding box renders around the detected faces. Add the parameter `/display_image`.  
+Our application could also display the image with bouding box rendered around the detected faces. Add the parameter `/display_image`.  
 
 >Example :
 >http://127.0.0.1:5000/api/ria2.test.education/request_analysis/display_image
