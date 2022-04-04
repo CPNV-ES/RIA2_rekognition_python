@@ -1,5 +1,37 @@
 # RIA2_rekognition_python
 
+## Endpoints
+
+### Request Analysis
+```
+/api/<bucket>/request_analysis
+```
+
+Request an face rekognition of a file. 
+
+Parameters :
+
+The ``<bucket>`` AWS to use to upload the image.
+
+Any doubt ? Execute the commande bellow to show available buckets :
+```
+aws s3 ls
+```
+
+Parameters [on post] :
+| Name | Type | Description |
+| -------- | -------- | -------- |
+| file     | File     | Image to rekognize     |
+| arguments     | String     | Option, Return specify arguments|
+
+>Example :
+>http://127.0.0.1:5000/api/ria2.test.education/request_analysis
+
+Our application could also display the image with bouding box renders around the detected faces. Add the parameter `/display_image`.  
+
+>Example :
+>http://127.0.0.1:5000/api/ria2.test.education/request_analysis/display_image
+
 ## Get Started
 
 ### Setup environment variables
