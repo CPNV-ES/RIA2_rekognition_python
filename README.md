@@ -22,7 +22,10 @@ Parameters [on post] :
 | Name | Type | Description |
 | -------- | -------- | -------- |
 | file     | File     | Image to rekognize     |
-| arguments     | String     | Option, Return specify arguments|
+| arguments     | String     | Option, Return only the specify arguments. To write multiple arguments write them as : `arg1,arg2,arg3`|
+
+>Example of arguments to use
+> `has` (Facial Characteristic), `age_range` (Age range of the person)
 
 >Example :
 >http://127.0.0.1:5000/api/ria2.test.education/request_analysis
