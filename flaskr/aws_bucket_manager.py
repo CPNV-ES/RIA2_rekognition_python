@@ -25,7 +25,7 @@ class AwsBucketManager:
 
         result = await self.create_object(bucket_name=bucket_name, object_file_path=file_path)
 
-        return result, 200
+        return result
 
     async def create_object(self, bucket_name=None, object_file_path=None):
         """
@@ -33,44 +33,46 @@ class AwsBucketManager:
         """
         if bucket_name and not object_file_path:
             if await self.object_exists(bucket_name=bucket_name):
-                object_url = "http://s3-%s.amazonaws.com/%s/" % (self.s3_default_region, bucket_name)
-
-                return object_url
+                return "Bucket already exists", 400
             else:
                 try:
                     self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
                                         'LocationConstraint': self.s3_default_region})
                 except:
-                    return False
+                    return "Error while creating the bucket", 500
 
         if bucket_name and object_file_path:
             file_name = object_file_path.split("\\")[-1]
 
             if await self.object_exists(bucket_name=bucket_name):
                 try:
-                    self.s3.put_object(Bucket=bucket_name,
-                                       Key=file_name, Body=object_file_path)
+                    self.s3.upload_file(object_file_path, bucket_name, file_name)
 
-                    object_url = "http://s3-%s.amazonaws.com/%s/%s" % (self.s3_default_region, bucket_name, file_name)
+                    presigned_url = self.s3.generate_presigned_url('get_object', Params={
+                        'Bucket': bucket_name,
+                        'Key': file_name
+                    }, ExpiresIn=3600)
 
-                    return object_url
+                    return presigned_url, 200
                 except:
-                    return False
+                    return "Error while uploading the file", 500
             else:
                 try:
                     self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
                                         'LocationConstraint': self.s3_default_region})
 
-                    self.s3.put_object(Bucket=bucket_name,
-                                       Key=file_name, Body=object_file_path)
+                    self.s3.upload_file(object_file_path, bucket_name, file_name)
 
-                    object_url = "http://s3-%s.amazonaws.com/%s/%s" % (self.s3_default_region, bucket_name, file_name)
+                    presigned_url = self.s3.generate_presigned_url('get_object', Params={
+                        'Bucket': bucket_name,
+                        'Key': file_name
+                    }, ExpiresIn=3600)
 
-                    return object_url
+                    return presigned_url, 200
                 except:
-                    return False
+                    return "Error while creating the bucket and uploading the file", 500
         
-        return False
+        return "Error while creating the object", 500
 
     async def object_exists(self, bucket_name=None, object_name=None):
         """
@@ -101,10 +103,10 @@ class AwsBucketManager:
         try:
             self.s3.download_file(bucket_name, object_name, '%s%s' % (
                 self.storage_folder, object_name))
-        except:
-            return False
 
-        return True
+            return "Object downloaded", 200
+        except:
+            return "Error while downloading the object", 500
 
     async def remove_object(self, bucket_name=None, object_name=None):
         """
@@ -117,16 +119,16 @@ class AwsBucketManager:
                 s3_resource.Bucket(bucket_name).objects.all().delete()
                 self.s3.delete_bucket(Bucket=bucket_name)
 
-                return True
+                return "Bucket deleted", 200
             except:
-                return False
+                return "Error while deleting the bucket", 500
         
         if bucket_name and object_name:
             try:
                 s3_resource.Object(bucket_name, object_name).delete()
 
-                return True
+                return "Object deleted", 200
             except:
-                return False
+                return "Error while deleting the object", 500
         
-        return False
+        return "Error while deleting the object", 500
