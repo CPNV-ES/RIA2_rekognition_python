@@ -100,18 +100,11 @@ def create_app(test_config=None):
 
         file = request.files['file']
 
-        print("UPLOAD")
         file_exists = await i_aws_bucket_manager.upload_file(bucket, file)
-        print(file_exists)
 
-        print("SAVE")
         saveResult = await i_aws_bucket_manager.create_object(bucket, file)
-        print(saveResult)
 
-        print("DOWNLOAD")
         downloadResult = await download(bucket, file)
-        print(downloadResult)
-        
 
         return app.response_class(response=face_from_local_file(file.filename, shouldDisplayImage),
                                       status=200,
