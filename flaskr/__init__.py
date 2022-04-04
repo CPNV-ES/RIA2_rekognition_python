@@ -73,24 +73,6 @@ def create_app(test_config=None):
     async def download(bucket, object):
         return await i_aws_bucket_manager.download_object(bucket, object)
 
-    @app.route('/api/detect/face/<url>')
-    def rekognition_face(url):
-        return app.response_class(response=face_from_local_file(url),
-                                  status=200,
-                                  mimetype='application/json')
-      
-    @app.route('/api/detect/face/<url>/<args>')
-    def rekognition_face_args(url, args):
-        return app.response_class(response=face_from_local_file(url, False, args),
-                                  status=200,
-                                  mimetype='application/json')
-
-    @app.route('/api/detect/face/display_image/<url>')
-    def rekognition_face_show_image(url):
-        return app.response_class(response=face_from_local_file(url, True),
-                                  status=200,
-                                  mimetype='application/json')
-
     @app.route('/api/request_analysis/<bucket>', methods=['POST'])
     async def RequestAnalysis(bucket, shouldDisplayImage=False):
         i_aws_bucket_manager = IBucketManager()
