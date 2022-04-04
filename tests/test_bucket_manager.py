@@ -14,7 +14,7 @@ class BucketManagerTestCase(unittest.IsolatedAsyncioTestCase):
         This test method initializes the context before each test method run.
         """
         self.bucket_manager = AwsBucketManager()
-        self.bucket_name = 'ria2.diduno.education'
+        self.bucket_name = 'ria2.testbucketmanager.diduno.education'
         self.file_path = 'C:\\Users\\dylan\\Downloads\\duck.jpg'
         self.object_name = self.file_path.split("\\")[-1]
 
