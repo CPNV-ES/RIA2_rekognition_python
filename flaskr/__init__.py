@@ -7,9 +7,8 @@ import pandas as pd
 import re
 from pypika import MySQLQuery as Query, Table, CustomFunction
 from flask import Flask, request, jsonify, json
-from werkzeug.utils import secure_filename
-from flaskr.aws_bucket_manager import AwsBucketManager
-from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
+from flaskr.api.interfaces.i_bucket_manager import IBucketManager
+from flaskr.api.managers.rekognition_image_detection import face_from_url, face_from_local_file
 
 
 class AttributeType(Enum):
@@ -31,6 +30,7 @@ class AttributeType(Enum):
 
 
 def create_app(test_config=None):
+    i_aws_bucket_manager = IBucketManager()
 
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -38,8 +38,6 @@ def create_app(test_config=None):
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
-
-    aws_bucket_manager = AwsBucketManager()
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -53,6 +51,27 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
+
+    @app.route('/api/upload/<bucket>', methods=['POST'])
+    async def upload(bucket):
+        if 'file' not in request.files:
+            return 'No file.', 400
+
+        file = request.files['file']
+
+        return await i_aws_bucket_manager.upload_file(bucket, file)
+
+    @app.route('/api/delete/<bucket>', methods=['DELETE'])
+    async def remove_bucket(bucket):
+        return await i_aws_bucket_manager.remove_object(bucket_name=bucket)
+
+    @app.route('/api/delete/<bucket>/<object>', methods=['DELETE'])
+    async def remove_object(bucket, object):
+        return await i_aws_bucket_manager.remove_object(bucket_name=bucket, object_name=object)
+
+    @app.route('/api/download/<bucket>/<object>', methods=['GET'])
+    async def download(bucket, object):
+        return await i_aws_bucket_manager.download_object(bucket, object)
 
     @app.route('/api/detect/face/<url>')
     def rekognition_face(url):
@@ -72,29 +91,6 @@ def create_app(test_config=None):
                                   status=200,
                                   mimetype='application/json')
 
-    @app.errorhandler(404)
-    def handle_404(e):
-        return 'This route doesn\'t exist :('
-
-    @app.route('/upload', methods=['POST'])
-    async def upload():
-        if 'file' not in request.files:
-            return 'No file.', 400
-
-        file = request.files['file']
-
-        await aws_bucket_manager.upload_file(file)
-
-        # ISSUE : Always return False but it's working
-        """ if await aws_bucket_manager.upload_file(file):
-            return 'File uploaded successfully.', 200
-        else:
-            return 'Upload failed.', 400 """
-
-        return 'File uploaded successfully.', 200
-
-        # TODO send link to face detector, facedetect(link, params)
-
     @app.route('/api/request_analysis', methods=['POST'])
     async def RequestAnalysis(shouldDisplayImage=False):
         if 'file' not in request.files:
@@ -102,14 +98,12 @@ def create_app(test_config=None):
 
         file = request.files['file']
 
-        file_exists = aws_bucket_manager.object_exists(
-            os.getenv('BUCKET_NAME'), file.filename)
+        file_exists = aws_bucket_manager.object_exists(file.filename)
 
         if (file_exists):
             saveResult = 'The file already exists.', 400
         else:
-            saveResult = await aws_bucket_manager.create_object(
-                os.getenv('BUCKET_NAME'), file)
+            saveResult = await aws_bucket_manager.create_object(file)
 
         print(saveResult)
 
@@ -127,27 +121,9 @@ def create_app(test_config=None):
         else:
             return app.response_class('Impossible to rekognise the face', 500)
 
-        return app.response_class('An error has occured', 500)
-
     @app.route('/api/display_image/request_analysis', methods=['POST'])
     async def RequestAnalysisShowImage():
         return await RequestAnalysis(True)
-
-    @app.route('/delete/<url>', methods=['DELETE'])
-    async def remove(url):
-        file_name = url
-        if await aws_bucket_manager.remove_object(file_name):
-            return 'File deleted successfully.', 200
-        else:
-            return 'File not found.', 404
-
-    @app.route('/download/<url>', methods=['GET'])
-    async def download(url):
-        file_name = url
-        if await aws_bucket_manager.download_object(file_name):
-            return 'File downloaded successfully.', 200
-        else:
-            return 'Impossible to download the file', 400
 
     @app.route('/api/generate/sql', methods=['POST'])
     async def generate_sql():
@@ -255,5 +231,9 @@ def create_app(test_config=None):
             message = str(e)
 
         return message
+
+    @app.errorhandler(404)
+    def handle_404(e):
+        return 'Not found', 404
 
     return app
