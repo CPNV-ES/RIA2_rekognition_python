@@ -6,13 +6,12 @@ import pandas as pd
 import re
 
 from flask import Flask, request, jsonify, json
-from werkzeug.utils import secure_filename
-from flaskr.aws_bucket_manager import AwsBucketManager
-from flaskr.rekognition_image_detection import face_from_url, face_from_local_file
+from flaskr.api.interfaces.i_bucket_manager import IBucketManager
+from flaskr.api.managers.rekognition_image_detection import face_from_url, face_from_local_file
 
 
 def create_app(test_config=None):
-    aws_bucket_manager = AwsBucketManager()
+    i_aws_bucket_manager = IBucketManager()
 
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -41,15 +40,19 @@ def create_app(test_config=None):
 
         file = request.files['file']
 
-        return await aws_bucket_manager.upload_file(bucket, file)
+        return await i_aws_bucket_manager.upload_file(bucket, file)
+
+    @app.route('/api/delete/<bucket>', methods=['DELETE'])
+    async def remove_bucket(bucket):
+        return await i_aws_bucket_manager.remove_object(bucket_name=bucket)
 
     @app.route('/api/delete/<bucket>/<object>', methods=['DELETE'])
-    async def remove(bucket, object):
-        return await aws_bucket_manager.remove_object(bucket_name=bucket, object_name=object)
+    async def remove_object(bucket, object):
+        return await i_aws_bucket_manager.remove_object(bucket_name=bucket, object_name=object)
 
     @app.route('/api/download/<bucket>/<object>', methods=['GET'])
     async def download(bucket, object):
-        return await aws_bucket_manager.download_object(bucket, object)
+        return await i_aws_bucket_manager.download_object(bucket, object)
 
     @app.route('/api/detect/face/<url>')
     def rekognition_face(url):
