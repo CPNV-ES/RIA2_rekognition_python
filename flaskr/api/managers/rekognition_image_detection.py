@@ -17,7 +17,7 @@ from pprint import pprint
 import boto3
 from botocore.exceptions import ClientError
 from flask import request as requests
-from flaskr.rekognition_objects import RekognitionFace, RekognitionCelebrity, RekognitionLabel, RekognitionModerationLabel, RekognitionText, show_bounding_boxes, show_polygons
+from flaskr.api.managers.rekognition_objects import RekognitionFace, RekognitionCelebrity, RekognitionLabel, RekognitionModerationLabel, RekognitionText, show_bounding_boxes, show_polygons
 
 logger = logging.getLogger(__name__)
 
