@@ -73,7 +73,7 @@ def create_app(test_config=None):
     async def download(bucket, object):
         return await i_aws_bucket_manager.download_object(bucket, object)
 
-    @app.route('/api/request_analysis/<bucket>', methods=['POST'])
+    @app.route('/api/<bucket>/request_analysis', methods=['POST'])
     async def RequestAnalysis(bucket, shouldDisplayImage=False):
         i_aws_bucket_manager = IBucketManager()
 
@@ -93,9 +93,9 @@ def create_app(test_config=None):
                                       mimetype='application/json')
 
 
-    @app.route('/api/display_image/request_analysis', methods=['POST'])
-    async def RequestAnalysisShowImage():
-        return await RequestAnalysis(True)
+    @app.route('/api/<bucket>/request_analysis/display_image', methods=['POST'])
+    async def RequestAnalysisShowImage(bucket):
+        return await RequestAnalysis(bucket, True)
 
     @app.route('/api/generate/sql', methods=['POST'])
     async def generate_sql():
