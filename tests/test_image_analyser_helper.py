@@ -29,19 +29,8 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
         # Upload picture
         self.aws_bucket_manager = AwsBucketManager()
 
-        self.image_url = "%s%s" % (
-            os.getenv('BUCKET_URL'), self.local_image_name)
-        self.image_url = "https://s3.eu-central-1.amazonaws.com/ria2.diduno.education/duck.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA2KFJKL4O5BC6BG62%2F20220404%2Feu-central-1%2Fs3%2Faws4_request&X-Amz-Date=20220404T075501Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=c2d6027d8f9220aa63d87ad6a5c2f32833176da527cf0b43daca9a389cc17231"
-
         # Prepare expected json
-        # Here instead of using an outdated json we get it fresh so we make sure there's no difference
-        # Bonus : We don't need to manually update it
         self.expected_json = face_from_local_file(self.local_image_name)
-
-        #self.json_name = "expected_test.json"
-        #full_path_to_json = "./tests/" + self.json_name
-        #file = open(full_path_to_json, "r")
-        # file.close()
 
         # Query args
         self.max_labels = 10
@@ -52,8 +41,13 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
     when we try to analyze a local file
     """
     async def test_analyse_localfile_success(self):
-        actual_json = face_from_local_file(self.local_image_name)
+        # Given
+        picture = self.local_image_name
 
+        # When
+        actual_json = face_from_local_file(picture)
+
+        #Then
         self.assertEqual(self.expected_json, actual_json)
 
     """    
@@ -61,9 +55,13 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
     when we try to analyze a data object presents on a bucket
     """
     async def test_analyse_dataobject_succes(self):
+        # Given
         result = await self.aws_bucket_manager.create_object(self.bucket_name, self.image_copy_path)
+        
+        # When
         actual_json = face_from_url(result[0], False)
 
+        # Then
         self.assertEqual(self.expected_json, actual_json)
 
     """    
@@ -71,9 +69,13 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
     when we try to analyze a data object presents on a bucket
     """
     async def test_to_json_dataobject_succes(self):
+        # Given
         result = await self.aws_bucket_manager.create_object(self.bucket_name, self.image_copy_path)
+        
+        # When
         actual_json = face_from_url(result[0], False)
 
+        # Then
         self.assertEqual(self.expected_json, actual_json)
 
 
