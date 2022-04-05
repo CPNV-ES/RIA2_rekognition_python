@@ -73,14 +73,19 @@ def create_app(test_config=None):
     async def download(bucket, object):
         return await i_aws_bucket_manager.download_object(bucket, object)
 
-    @app.route('/api/<bucket>/request_analysis', methods=['POST'])
-    async def RequestAnalysis(bucket, shouldDisplayImage=False):
+    @app.route('/api/request_analysis', methods=['POST'])
+    async def RequestAnalysis(shouldDisplayImage=False):
         i_aws_bucket_manager = IBucketManager()
+
+        arguments = request.values.get('arguments')
+        bucket = request.values.get('bucket')
 
         if 'file' not in request.files:
             return 'No file.', 400
 
-        arguments = request.values.get('arguments')
+        if bucket is None:
+            return 'You have to choose a bucket before start', 400
+
 
         file = request.files['file']
 
@@ -95,9 +100,9 @@ def create_app(test_config=None):
                                     mimetype='application/json')
 
 
-    @app.route('/api/<bucket>/request_analysis/display_image', methods=['POST'])
-    async def RequestAnalysisShowImage(bucket):
-        return await RequestAnalysis(bucket, True)
+    @app.route('/api/request_analysis/display_image', methods=['POST'])
+    async def RequestAnalysisShowImage():
+        return await RequestAnalysis(True)
 
     @app.route('/api/generate/sql', methods=['POST'])
     async def generate_sql():
