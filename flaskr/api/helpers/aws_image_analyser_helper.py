@@ -12,4 +12,4 @@ class AwsImageAnalyserHelper(IAwsImageAnalyserHelper):
     async def MakeAnalysisRequest(self, url: str, maxLables: int, minConfidence: int):
         result = await self.aws_bucket_manager.create_object(self.bucket_name, url)
         
-        return face_from_url(result[0], False)
+        return face_from_url(result[0], False) # missing args to pass max labels and minConfidence
