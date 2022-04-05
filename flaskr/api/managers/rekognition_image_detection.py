@@ -18,7 +18,7 @@ import boto3
 from botocore.exceptions import ClientError
 #from flask import request as requests
 import requests
-from flaskr.rekognition_objects import RekognitionFace, RekognitionCelebrity, RekognitionLabel, RekognitionModerationLabel, RekognitionText, show_bounding_boxes, show_polygons
+from flaskr.api.managers.rekognition_objects import RekognitionFace, RekognitionCelebrity, RekognitionLabel, RekognitionModerationLabel, RekognitionText, show_bounding_boxes, show_polygons
 
 logger = logging.getLogger(__name__)
 
@@ -229,10 +229,11 @@ def face_from_url(url, shoulDisplayImageBoundingBox):
 
     print(f"Detecting faces in {image.image_name}...")
     faces = image.detect_faces()
+    faces_list = []
 
     print(f"Found {len(faces)} faces, here are the first three.")
     for face in faces[:3]:
-        faces_list.append(face)
+        faces_list.append(face.to_dict())
 
     if shoulDisplayImageBoundingBox :
         show_bounding_boxes(
@@ -243,7 +244,7 @@ def face_from_url(url, shoulDisplayImageBoundingBox):
     print("Thanks for watching!")
     print('-'*88)
     
-    return json.dumps(faces_list)
+    return faces_list
 
 
 def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
