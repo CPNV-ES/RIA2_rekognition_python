@@ -73,55 +73,34 @@ def create_app(test_config=None):
     async def download(bucket, object):
         return await i_aws_bucket_manager.download_object(bucket, object)
 
-    @app.route('/api/detect/face/<url>')
-    def rekognition_face(url):
-        return app.response_class(response=face_from_local_file(url),
-                                  status=200,
-                                  mimetype='application/json')
-      
-    @app.route('/api/detect/face/<url>/<args>')
-    def rekognition_face_args(url, args):
-        return app.response_class(response=face_from_local_file(url, False, args),
-                                  status=200,
-                                  mimetype='application/json')
-
-    @app.route('/api/detect/face/display_image/<url>')
-    def rekognition_face_show_image(url):
-        return app.response_class(response=face_from_local_file(url, True),
-                                  status=200,
-                                  mimetype='application/json')
-
     @app.route('/api/request_analysis', methods=['POST'])
     async def RequestAnalysis(shouldDisplayImage=False):
+        i_aws_bucket_manager = IBucketManager()
+
+        arguments = request.values.get('arguments')
+        bucket = request.values.get('bucket')
+
         if 'file' not in request.files:
             return 'No file.', 400
 
+        if bucket is None:
+            return 'You have to choose a bucket before start', 400
+
+
         file = request.files['file']
 
-        file_exists = aws_bucket_manager.object_exists(file.filename)
+        file_exists = await i_aws_bucket_manager.upload_file(bucket, file)
 
-        if (file_exists):
-            saveResult = 'The file already exists.', 400
-        else:
-            saveResult = await aws_bucket_manager.create_object(file)
+        saveResult = await i_aws_bucket_manager.create_object(bucket, file)
 
-        print(saveResult)
+        downloadResult = await download(bucket, file)
 
-        # If the insert is a success
-        if saveResult == True:
-            downloadResult = await download(file.filename)
-        else:
-            return app.response_class('Impossible to download the file', 500)
+        return app.response_class(response=face_from_local_file(file.filename, shouldDisplayImage, arguments),
+                                    status=200,
+                                    mimetype='application/json')
 
-        # If the download is a success
-        if downloadResult == True:
-            return app.response_class(response=face_from_local_file(file.filename, shouldDisplayImage),
-                                      status=200,
-                                      mimetype='application/json')
-        else:
-            return app.response_class('Impossible to rekognise the face', 500)
 
-    @app.route('/api/display_image/request_analysis', methods=['POST'])
+    @app.route('/api/request_analysis/display_image', methods=['POST'])
     async def RequestAnalysisShowImage():
         return await RequestAnalysis(True)
 

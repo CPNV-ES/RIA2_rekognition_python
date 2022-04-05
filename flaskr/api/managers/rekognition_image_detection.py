@@ -269,23 +269,24 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
     # If arg is not None, then it is a list of arguments
     # split the arg into list
     if args is not None:
-        selectedAttributes = []
+        arg_list = args.split(',')
+        # List of all attributes returned
+        attributes = []
 
-        #arg_list = args.split(',')
-
+        # get faces in the correct format
         for face in faces[:3]:
             faces_list.append(face.to_dict_args())
 
+        # get the attributes
+        for arg in arg_list:
+            attribute_list = []
+            for face in faces_list:
+                # get the interested attribute with the argument
+                attribute_list.append(face[arg])
+            data = { arg : attribute_list}
+            attributes.append(data)
 
-        #return json.dumps(faces_list)
-
-        # for each args
-        #for arg in arg_list:
-        for face in faces_list:
-            # get the interested attribute with the argument
-            selectedAttributes.append(face[args])
-
-        return json.dumps(selectedAttributes)
+        return json.dumps(attributes)
 
     else:
 
