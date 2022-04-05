@@ -4,25 +4,22 @@
 
 ### Request Analysis
 ```
-/api/<bucket>/request_analysis
+/api/request_analysis
 ```
 
 Request an face rekognition of a file. 
 
-Parameters :
-
-The ``<bucket>`` AWS to use to upload the image.
-
-Any doubt ? Execute the command bellow to show available buckets :
-```
-aws s3 ls
-```
-
 Parameters [on post] :
 | Name | Type | Description |
 | -------- | -------- | -------- |
+| Bucket*1     | String     | Bucket to use     |
 | file     | File     | Image to rekognize     |
 | arguments     | String     | Optional, Returns only the specify arguments. To write multiple arguments write them as : `arg1,arg2,arg3`|
+
+*1Any doubt to the bucket parameter ? Execute the command bellow to show available buckets :
+```
+aws s3 ls
+```
 
 >Example of arguments to use
 > `has` (Facial Characteristic), `age_range` (Age range of the person)
