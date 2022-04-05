@@ -13,16 +13,16 @@ Parameters [on post] :
 | Name | Type | Description |
 | -------- | -------- | -------- |
 | Bucket*1     | String     | Bucket to use     |
-| file     | File     | Image to rekognize     |
-| arguments     | String     | Optional, Returns only the specify arguments. To write multiple arguments write them as : `arg1,arg2,arg3`|
+| file*2     | File     | Image to rekognize     |
+| arguments     | String     | Optional, Returns only the specify arguments. To write multiple arguments write them as : `arg1,arg2,arg3`. If you want to return every arguments, simply don't use this parameter. |
 
-*1Any doubt to the bucket parameter ? Execute the command bellow to show available buckets :
+*1. Any doubt to the bucket parameter ? Execute the command bellow to show available buckets :
 ```
 aws s3 ls
 ```
 
->Example of arguments to use
-> `has` (Facial Characteristic), `age_range` (Age range of the person)
+>*2. Example of arguments to use :
+> `has` (Facial Characteristic), `age_range` (Age range of the person).
 
 >Example :
 >http://127.0.0.1:5000/api/ria2.test.education/request_analysis
