@@ -42,23 +42,23 @@ class AwsBucketManager:
 
         if bucket_name and object_file_path:
             if await self.object_exists(bucket_name=bucket_name):
-                result = await self._upload_file(bucket_name=bucket_name, file_path=object_file_path)
-                
+                result = await self._create_object(bucket_name=bucket_name, file_path=object_file_path)
+
                 if result:
                     return result, 200
                 else:
                     return "Error while uploading the object", 500
             else:
                 if await self._create_bucket(bucket_name):
-                    result = await self._upload_file(bucket_name=bucket_name, file_path=object_file_path)
-                    
+                    result = await self._create_object(bucket_name=bucket_name, file_path=object_file_path)
+
                     if result:
                         return result, 200
                     else:
                         return "Error while uploading the object", 500
                 else:
                     return "Error while creating the bucket and uploading the file", 500
-        
+
         return "Error while creating the object", 500
 
     async def object_exists(self, bucket_name=None, object_name=None):
@@ -80,7 +80,7 @@ class AwsBucketManager:
                 return True
             except:
                 return False
-        
+
         return False
 
     async def download_object(self, bucket_name, object_name):
@@ -109,7 +109,7 @@ class AwsBucketManager:
                 return "Bucket deleted", 200
             except:
                 return "Error while deleting the bucket", 500
-        
+
         if bucket_name and object_name:
             try:
                 s3_resource.Object(bucket_name, object_name).delete()
@@ -117,7 +117,7 @@ class AwsBucketManager:
                 return "Object deleted", 200
             except:
                 return "Error while deleting the object", 500
-        
+
         return "Error while deleting the object", 500
 
     async def _create_bucket(self, bucket_name):
@@ -126,12 +126,12 @@ class AwsBucketManager:
         """
         try:
             self.s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
-                                        'LocationConstraint': self.s3_default_region})
+                'LocationConstraint': self.s3_default_region})
             return True
         except:
             return False
-    
-    async def _upload_file(self, bucket_name, file_path):
+
+    async def _create_object(self, bucket_name, file_path):
         """
         Create an object on s3 using a multipart upload
         """
@@ -140,7 +140,7 @@ class AwsBucketManager:
             self.s3.upload_file(file_path, bucket_name, file_name)
 
             presigned_url = await self._get_presigned_url(bucket_name, file_name)
-            
+
             return presigned_url
         except:
             return False
