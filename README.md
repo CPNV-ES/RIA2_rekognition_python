@@ -1,34 +1,23 @@
 # RIA2_rekognition_python
 
-# Get Started
+## Get Started
 
-First install the dependencies
+### Setup environment variables
 
-```sh
-pip install -r requirements.txt
-```
-## Configure the `.env` file
+1. Copy paste the file `.env_example` and rename it to `.env`
 
-The `.env` file is a file fill up with the secure configurations to link your project with AWS.
-
-1. Copy Past the file `.env_example` and rename it to `.env`
-
-2. Configure it
+2. Fill it with your settings
 
 ```js
-BUCKET_NAME=bucket
-BUCKET_URL=s3://${BUCKET_NAME}.${DOMAIN}
-BUCKET_FOLDER=default_storage
 AWS_ACCESS_KEY_ID=aws_access_key_id // Your aws access key id
 AWS_SECRET_ACCESS_KEY=aws_secret_access_key // Your aws secret access key
-AWS_DEFAULT_REGION=eu-central-1
-STORAGE_FOLDER=C:/ //The storage folder where images will be downloaded
+AWS_DEFAULT_REGION=eu-central-1 // Your aws default region
+STORAGE_FOLDER=C:/ // Storage folder where images will be downloaded
 ```
 
+### Create a virtual python environnment
 
-## Create a virtual python environnment
-
-### On `Linux`
+#### On `Linux`
 
 ```sh
 python3 -m venv venv
@@ -36,59 +25,107 @@ python3 -m venv venv
 . venv/bin/activate
 
 export FLASK_APP=flaskr.py
+
 export FLASK_ENV=development
-python -m flask run
 ```
 
-### On `Windows`
+#### On `Windows`
 
 ```sh
+python -m venv ./
+
+.\Scripts\activate
+
 $Env:FLASK_APP="flaskr.py"
+
 $Env:FLASK_ENV="development"
 ```
 
-### Run
+#### Install the dependencies
 
 ```sh
-cd .\flaskr\
+pip install -r requirements.txt
+```
 
+### Run the app
+
+```sh
 flask run
 ```
 
-## Set environment variables
-
-```sh
-cp .env.exemple .env
-```
-
-Edit the file with your environment variables.
-
-## Via Script
-
-You also could start the following script to run the environment :
+#### Windows
 
 ```
 .\winStart.ps1
 ```
 
----
-# Testing
+### Testing
+
+Examples
 
 ```
 python -m unittest tests.test_bucket_manager
 python -m unittest tests.test_bucket_manager.BucketManagerTestCase.test_create_object_with_object_not_existing_success
 ```
 
----
-# Commands
+### Commands
 
-## Detect face
+#### Database
+
+##### Examples of MySQL queries
+
+##### Last 10 days processed images
+```sql
+SELECT image.name, image.hash, analysis.created_at 
+FROM image 
+INNER JOIN analysis 
+ON image.id = analysis.image_id 
+WHERE analysis.created_at >= NOW() - INTERVAL 10 DAY
+```
+
+##### Image with a specific specified attribute has been found
+```sql
+SELECT image.id, image.name, attribute.name, attribute.value_number
+FROM image 
+INNER JOIN analysis 
+ON analysis.image_id = image.id
+INNER JOIN object
+ON object.analysis_id = analysis.id
+INNER JOIN attribute
+ON attribute.object_id = object.id
+WHERE attribute.name LIKE "<custom_attribute_here>.%" AND attribute.name LIKE "%.Confidence"
+```
+
+##### Average analysis by user (ip)
+```sql
+SELECT a.ip as ip, (AVG((
+SELECT COUNT(*) FROM attribute 
+INNER JOIN object 
+ON attribute.object_id = object.id 
+INNER JOIN analysis 
+ON object.analysis_id = analysis.id 
+WHERE analysis.ip = a.ip)) ) as average
+FROM analysis AS a
+GROUP BY ip
+```
+
+##### Number of time an image has been process group by user (ip)
+```sql
+SELECT image.hash, analysis.ip, COUNT(analysis.ip) as request
+FROM image 
+INNER JOIN analysis 
+ON image.id = analysis.image_id 
+WHERE analysis.updated_at >= NOW() - INTERVAL 24 HOUR
+GROUP BY image.hash, analysis.ip
+```
+
+#### Detect face
 
 ```
 aws rekognition detect-faces ^ --image "{\"S3Object\":{\"Bucket\":\"ria2python.actualit.info\",\"Name\":\"cake.jpg\"}}"
 ```
 
-### Output
+##### Output
 
 ```
 {                                                                                     
