@@ -33,7 +33,7 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
 
         # Query args
         self.max_labels = 10
-        self.minConfidence = 80
+        self.min_confidence = 80
 
     """    
     This test method checks the MakeAnalysis'answer
@@ -58,8 +58,12 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
         picture = self.image_copy_path
 
         # When
-        actual_json = self.image_analyser_helper.MakeAnalysisRequest(
-            self.image_copy_path)
+        actual_json = await self.image_analyser_helper.MakeAnalysisRequest(
+            picture, self.max_labels, self.min_confidence)
+
+            
+        print("FUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCK")
+        print(actual_json)
 
         # Then
         self.assertEqual(self.expected_json, actual_json)
@@ -73,8 +77,8 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
         picture = self.image_copy_path
 
         # When
-        actual_json = self.image_analyser_helper.MakeAnalysisRequest(
-            self.image_copy_path)
+        actual_json = await self.image_analyser_helper.MakeAnalysisRequest(
+            picture, self.max_labels, self.min_confidence)
 
         # Then
         self.assertEqual(self.expected_json, actual_json)
