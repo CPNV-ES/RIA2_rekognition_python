@@ -61,10 +61,6 @@ class ImageAnalyserHelperTestCase(unittest.IsolatedAsyncioTestCase):
         actual_json = await self.image_analyser_helper.MakeAnalysisRequest(
             picture, self.max_labels, self.min_confidence)
 
-            
-        print("FUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCKFUCK")
-        print(actual_json)
-
         # Then
         self.assertEqual(self.expected_json, actual_json)
 
