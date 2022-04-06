@@ -214,9 +214,6 @@ class RekognitionImage:
 
 
 def face_from_url(url, shoulDisplayImageBoundingBox):
-    print('-' * 88)
-    print("Face Rekognition Demo ")
-    print('-' * 88)
 
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(message)s')
@@ -224,27 +221,12 @@ def face_from_url(url, shoulDisplayImageBoundingBox):
 
     image_response = requests.get(url)
     print(image_response.content)
+
     image = RekognitionImage({'Bytes': image_response.content}, "image",
                              rekognition_client)
 
-    print(f"Detecting faces in {image.image_name}...")
-    faces = image.detect_faces()
-    faces_list = []
+    return getFaces(image, shoulDisplayImageBoundingBox)
 
-    print(f"Found {len(faces)} faces, here are the first three.")
-    for face in faces[:3]:
-        faces_list.append(face.to_dict())
-
-    if shoulDisplayImageBoundingBox :
-        show_bounding_boxes(
-            image.image['Bytes'], [
-                [face.bounding_box for face in faces]],
-            ['aqua'])
-    
-    print("Thanks for watching!")
-    print('-'*88)
-    
-    return faces_list
 
 
 def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
@@ -258,7 +240,7 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
 
     return getFaces(image, shoulDisplayImageBoundingBox, args)
 
-def getFaces(image:RekognitionImage, shoulDisplayImageBoundingBox, args=False):
+def getFaces(image:RekognitionImage, shoulDisplayImageBoundingBox, args=None):
     faces_list=[]
 
     faces = image.detect_faces()             
