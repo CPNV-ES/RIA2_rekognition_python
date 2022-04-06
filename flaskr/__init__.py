@@ -75,6 +75,9 @@ def create_app(test_config=None):
 
     @app.route('/api/request_analysis', methods=['POST'])
     async def RequestAnalysis(shouldDisplayImage=False):
+        
+        # Replace with AwsImageAnalyserHelper.MakeAnalysisRequest()
+
         i_aws_bucket_manager = IBucketManager()
 
         arguments = request.values.get('arguments')
