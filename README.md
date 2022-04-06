@@ -1,37 +1,5 @@
 # RIA2_rekognition_python
 
-## Endpoints
-
-### Request Analysis
-```
-/api/request_analysis
-```
-
-Request an face rekognition of a file. 
-
-Parameters [on post] :
-| Name | Type | Description |
-| -------- | -------- | -------- |
-| Bucket*1     | String     | Bucket to use     |
-| file*2     | File     | Image to rekognize     |
-| arguments     | String     | Optional, Returns only the specify arguments. To write multiple arguments write them as : `arg1,arg2,arg3`. If you want to return every arguments, simply don't use this parameter. |
-
-*1. Any doubt to the bucket parameter ? Execute the command bellow to show available buckets :
-```
-aws s3 ls
-```
-
->*2. Example of arguments to use :
-> `has` (Facial Characteristic), `age_range` (Age range of the person).
-
->Example :
->http://127.0.0.1:5000/api/ria2.test.education/request_analysis
-
-Our application could also display the image with bouding box rendered around the detected faces. Add the parameter `/display_image`.  
-
->Example :
->http://127.0.0.1:5000/api/ria2.test.education/request_analysis/display_image
-
 ## Get Started
 
 ### Setup environment variables
@@ -210,3 +178,81 @@ aws rekognition detect-faces ^ --image "{\"S3Object\":{\"Bucket\":\"ria2python.a
     ]                                                                                 
 }                                                                                     
 ```
+
+## API Endpoints
+
+### Bucket manager
+
+Upload a file **POST**
+```
+/api/upload/<bucket>
+```
+Parameters :
+| Name | Type | Description |
+| -------- | -------- | -------- |
+| bucket     | string     | bucket name     |
+
+Body :
+| Name | Type | Description |
+| -------- | -------- | -------- |
+| file     | file     | file to upload     |
+> The bucket is created if it does not exist
+
+Delete a bucket **DELETE**
+```
+/api/delete/<bucket>
+```
+Parameters :
+| Name | Type | Description |
+| -------- | -------- | -------- |
+| bucket     | string     | bucket name     |
+
+Delete a file **DELETE**
+```
+/api/delete/<bucket>/<object>
+```
+Parameters :
+| Name | Type | Description |
+| -------- | -------- | -------- |
+| bucket     | string     | bucket name     |
+| object     | string     | object name     |
+
+Download a file **GET**
+```
+/api/download/<bucket>/<object>
+```
+Parameters :
+| Name | Type | Description |
+| -------- | -------- | -------- |
+| bucket     | string     | bucket name     |
+| object     | string     | object name     |
+
+### Request Analysis
+```
+/api/request_analysis
+```
+
+Request an face rekognition of a file. 
+
+Parameters [on post] :
+| Name | Type | Description |
+| -------- | -------- | -------- |
+| Bucket*1     | String     | Bucket to use     |
+| file*2     | File     | Image to rekognize     |
+| arguments     | String     | Optional, Returns only the specify arguments. To write multiple arguments write them as : `arg1,arg2,arg3`. If you want to return every arguments, simply don't use this parameter. |
+
+*1. Any doubt to the bucket parameter ? Execute the command bellow to show available buckets :
+```
+aws s3 ls
+```
+
+>*2. Example of arguments to use :
+> `has` (Facial Characteristic), `age_range` (Age range of the person).
+
+>Example :
+>http://127.0.0.1:5000/api/ria2.test.education/request_analysis
+
+Our application could also display the image with bouding box rendered around the detected faces. Add the parameter `/display_image`.  
+
+>Example :
+>http://127.0.0.1:5000/api/ria2.test.education/request_analysis/display_image
