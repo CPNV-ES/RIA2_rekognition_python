@@ -15,7 +15,7 @@ class BucketManagerTestCase(unittest.IsolatedAsyncioTestCase):
         """
         self.bucket_manager = AwsBucketManager()
         self.bucket_name = 'ria2.testbucketmanager.diduno.education'
-        self.file_path = 'C:\\Users\\dylan\\Downloads\\duck.jpg'
+        self.file_path = 'C:\\Users\\OnStandBy\\Pictures\\duck.jpg'
         self.object_name = os.path.basename(self.file_path)
 
     async def test_create_not_existing_bucket(self):
