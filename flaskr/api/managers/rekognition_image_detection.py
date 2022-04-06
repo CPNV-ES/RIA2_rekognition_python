@@ -213,7 +213,7 @@ class RekognitionImage:
             return celebrities, other_faces
 
 
-def face_from_url(url, shoulDisplayImageBoundingBox):
+def face_from_url(url, shoulDisplayImageBoundingBox, args=None):
 
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(message)s')
@@ -225,7 +225,7 @@ def face_from_url(url, shoulDisplayImageBoundingBox):
     image = RekognitionImage({'Bytes': image_response.content}, "image",
                              rekognition_client)
 
-    return getFaces(image, shoulDisplayImageBoundingBox)
+    return getFaces(image, shoulDisplayImageBoundingBox, args)
 
 
 
