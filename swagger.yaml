@@ -1,0 +1,45 @@
+swagger: '2.0'
+info:
+  description: ''
+  version: 1.0.0
+  title: RIA2_rekognition_python
+  termsOfService: http://swagger.io/terms/
+basePath: /v2
+tags:
+  - name: api
+    description: ''
+schemes:
+  - https
+  - http
+paths:
+  /api/request_analysis:
+    post:
+      tags:
+        - api
+      summary: Send a picture to get faces detected and their analysis
+      operationId: analysis
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - in: formData
+          name: picture
+          type: file
+          description: Picture to analyse
+        - in: formData
+          name: maxLabels
+          type: integer
+          description: Maximum amount of labels to return
+        - in: formData
+          name: minConfidence
+          type: integer
+          description: Minimum label confidence to return
+      responses:
+        '200':
+          description: Success
+        '405':
+          description: Invalid input
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
