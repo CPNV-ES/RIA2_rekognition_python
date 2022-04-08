@@ -28,6 +28,10 @@ class AwsBucketManager:
         return result
 
     async def create_object(self, bucket_name=None, object_file_path=None):
+
+        #TODO Q1 - Are you using the SDK ?
+        #/TODO Q2 - Error management ?
+        #/TODO Q3 - Refactor ?
         """
         Create a bucket or an object on s3
         """
@@ -70,6 +74,7 @@ class AwsBucketManager:
                 self.s3.head_bucket(Bucket=bucket_name)
 
                 return True
+            #TODO Q4 - Could be more specific ?
             except:
                 return False
 
