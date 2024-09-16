@@ -213,10 +213,7 @@ class RekognitionImage:
             return celebrities, other_faces
 
 
-def face_from_url(url, shoulDisplayImageBoundingBox):
-    print('-' * 88)
-    print("Face Rekognition Demo ")
-    print('-' * 88)
+def face_from_url(url, shoulDisplayImageBoundingBox, args=None):
 
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(message)s')
@@ -224,33 +221,15 @@ def face_from_url(url, shoulDisplayImageBoundingBox):
 
     image_response = requests.get(url)
     print(image_response.content)
+
     image = RekognitionImage({'Bytes': image_response.content}, "image",
                              rekognition_client)
 
-    print(f"Detecting faces in {image.image_name}...")
-    faces = image.detect_faces()
-    faces_list = []
+    return getFaces(image, shoulDisplayImageBoundingBox, args)
 
-    print(f"Found {len(faces)} faces, here are the first three.")
-    for face in faces[:3]:
-        faces_list.append(face.to_dict())
-
-    if shoulDisplayImageBoundingBox :
-        show_bounding_boxes(
-            image.image['Bytes'], [
-                [face.bounding_box for face in faces]],
-            ['aqua'])
-    
-    print("Thanks for watching!")
-    print('-'*88)
-    
-    return faces_list
 
 
 def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
-
-    faces_list = []
-
     logging.basicConfig(level=logging.INFO,
                         format='%(levelname)s: %(message)s')
     rekognition_client = boto3.client('rekognition')
@@ -259,8 +238,13 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
 
     image = RekognitionImage.from_file(file_name, rekognition_client)
 
+    return getFaces(image, shoulDisplayImageBoundingBox, args)
+
+def getFaces(image:RekognitionImage, shoulDisplayImageBoundingBox, args=None):
+    faces_list=[]
+
     faces = image.detect_faces()             
-        
+
     # Display the image and bounding boxes of each face.
     if shoulDisplayImageBoundingBox:
         show_bounding_boxes(image.image['Bytes'],
@@ -287,33 +271,8 @@ def face_from_local_file(url, shoulDisplayImageBoundingBox=False, args=None):
             attributes.append(data)
 
         return json.dumps(attributes)
-
     else:
 
         for face in faces[:3]:
             faces_list.append(face.to_dict())
         return faces_list
-
-# This is a test
-def celebrity_demo():
-
-    print('-' * 88)
-    print("Welcome to the Amazon Rekognition celibrity detection demo!")
-    print('-' * 88)
-
-    logging.basicConfig(level=logging.INFO,
-                        format='%(levelname)s: %(message)s')
-    rekognition_client = boto3.client('rekognition')
-    celebrity_file_name = "flaskr/images/pexels-pixabay-53370.jpg"
-    celebrity_image = RekognitionImage.from_file(celebrity_file_name,
-                                                 rekognition_client)
-
-    print(f"Detecting celebrities in {celebrity_image.image_name}...")
-    celebs, others = celebrity_image.recognize_celebrities()
-    print(f"Found {len(celebs)} celebrities.")
-    for celeb in celebs:
-        pprint(celeb.to_dict())
-    show_bounding_boxes(celebrity_image.image['Bytes'],
-                        [[celeb.face.bounding_box for celeb in celebs]],
-                        ['aqua'])
-    input("Press Enter to continue.")
